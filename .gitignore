@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets (in case you add a licensed feed's key later)
+.env
+.env.local
+
+# Logs & OS junk
+*.log
+.DS_Store
+Thumbs.db

@@ -1,0 +1,14 @@
+{
+  "name": "my-fx-api",
+  "version": "1.0.0",
+  "description": "Your own live exchange-rate API, powered by the European Central Bank feed",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test:source": "node src/dataSource.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
