@@ -1,0 +1,27 @@
+meta {
+  name: Resend verification
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/resend-verification
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "you@test.com"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.dev_verify_url) {
+    bru.setEnvVar("verifyUrl", res.body.dev_verify_url);
+  }
+}
+
+docs {
+  Requests a fresh verification link for an unverified account.
+}

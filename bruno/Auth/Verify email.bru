@@ -1,0 +1,30 @@
+meta {
+  name: Verify email
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/auth/verify?token={{verifyToken}}
+  body: none
+  auth: none
+}
+
+params:query {
+  token: {{verifyToken}}
+}
+
+script:pre-request {
+  const u = bru.getEnvVar("verifyUrl") || "";
+  const t = u.split("token=")[1];
+  if (t) bru.setVar("verifyToken", t);
+}
+
+script:post-response {
+  if (res.body && res.body.token) bru.setEnvVar("token", res.body.token);
+}
+
+docs {
+  Verifies the email using the token from the signup link (auto-extracted from
+  `verifyUrl`). On success it captures the session `token`.
+}

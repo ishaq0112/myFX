@@ -5,10 +5,12 @@
   "type": "module",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test:source": "node src/dataSource.js"
+    "start": "node --env-file-if-exists=.env server.js",
+    "test:source": "node --env-file-if-exists=.env src/dataSource.js",
+    "db:check": "node --env-file-if-exists=.env src/dbCheck.js"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "express": "^4.19.2"
   }
 }

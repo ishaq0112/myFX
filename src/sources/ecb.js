@@ -5,7 +5,7 @@
 const ECB_URL = 'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml';
 
 export async function fetchEcb() {
-  const res = await fetch(ECB_URL);
+  const res = await fetch(ECB_URL, { signal: AbortSignal.timeout(8000) });
   if (!res.ok) throw new Error(`ECB HTTP ${res.status}`);
   const xml = await res.text();
 

@@ -1,0 +1,25 @@
+meta {
+  name: Convert
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/v1/convert?from=USD&to=INR&amount=100
+  body: none
+  auth: none
+}
+
+params:query {
+  from: USD
+  to: INR
+  amount: 100
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+docs {
+  Converts `amount` from one currency to another. Requires X-API-Key.
+}

@@ -11,7 +11,10 @@ const TABLE_A = 'https://api.nbp.pl/api/exchangerates/tables/A?format=json';
 const TABLE_B = 'https://api.nbp.pl/api/exchangerates/tables/B?format=json';
 
 export async function fetchNbp() {
-  const [ra, rb] = await Promise.all([fetch(TABLE_A), fetch(TABLE_B)]);
+  const [ra, rb] = await Promise.all([
+    fetch(TABLE_A, { signal: AbortSignal.timeout(8000) }),
+    fetch(TABLE_B, { signal: AbortSignal.timeout(8000) }),
+  ]);
   if (!ra.ok) throw new Error(`NBP Table A HTTP ${ra.status}`);
   const aJson = await ra.json();
   const bJson = rb.ok ? await rb.json() : [{ rates: [] }];

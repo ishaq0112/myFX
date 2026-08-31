@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MyFX — Developer Dashboard</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ============ AUTH (logged out) ============ -->
+<section id="auth">
+  <div class="auth-card">
+    <div class="brand"><span class="mark">M</span> My<span>FX</span></div>
+    <div class="tabs" id="authTabs">
+      <button class="active" data-mode="login">Log in</button>
+      <button data-mode="signup">Sign up</button>
+    </div>
+    <div class="field hidden" id="nameField"><label>Name</label><input id="authName" placeholder="Your name" /></div>
+    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@email.com" /></div>
+    <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="••••••••" /></div>
+    <button class="btn btn-primary" id="authSubmit" style="width:100%">Log in</button>
+    <div id="authNote" class="note info hidden"></div>
+  </div>
+</section>
+
+<!-- ============ APP (logged in) ============ -->
+<div class="app hidden" id="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="logo-grp"><span class="mark">M</span> My<span>FX</span></span>
+    </div>
+    <div class="welcome">
+      <span class="hi">Welcome back,</span>
+      <b id="welcomeName">—</b>
+    </div>
+    <nav class="nav" id="nav">
+      <button class="active" data-screen="overview"><span class="ic">🏠</span> Dashboard</button>
+      <button data-screen="keys"><span class="ic">🔑</span> API Keys</button>
+      <button data-screen="rates"><span class="ic">💱</span> Rates</button>
+      <button data-screen="billing"><span class="ic">💳</span> Billing</button>
+      <button data-screen="docs"><span class="ic">📖</span> Docs</button>
+      <button data-screen="settings"><span class="ic">⚙️</span> Settings</button>
+    </nav>
+    <div class="side-spacer"></div>
+    <div class="side-usage">
+      <b>Free plan</b>
+      <div class="su-sub">100,000 requests / month</div>
+      <div class="su-bar"><i style="width:47%"></i></div>
+    </div>
+    <div class="promo">
+      <b>Upgrade to Pro</b>
+      <p>1M requests/mo · hourly updates · priority support.</p>
+      <button class="promo-btn" data-goto="billing">See plans →</button>
+    </div>
+    <div class="side-acct">
+      <div class="avatar" id="sideAvatar">?</div>
+      <div class="who"><b id="sideEmail">—</b><small>Free plan</small></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="hb" id="hb">☰</button>
+      <h1 id="pageTitle">Overview</h1>
+      <div class="sp"></div>
+      <button class="btn btn-outline btn-sm" id="logoutBtn">Log out</button>
+    </header>
+
+    <main class="content">
+
+      <!-- DASHBOARD -->
+      <section id="overview" class="screen">
+        <div class="dash2">
+          <!-- ROW 1: stat cards + quick actions -->
+          <div class="drow-top">
+            <div class="mini-stats">
+              <div class="mini"><div class="mtop"><span class="mi t1">📊</span><div class="k">Requests this month</div></div><div class="v">47,318</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t2">📅</span><div class="k">Requests today</div></div><div class="v">1,842</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t3">🔑</span><div class="k">Active keys</div></div><div class="v" id="stKeys">—</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t4">⚠️</span><div class="k">Error rate</div></div><div class="v">0.31%</div></div>
+            </div>
+            <div class="card card-pad qa-card">
+              <h3>Quick Actions</h3>
+              <div class="qa">
+                <button id="heroCreate"><span>＋</span>New key</button>
+                <button data-goto="billing"><span>💳</span>Plans</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ROW 2: full-width graph -->
+          <div class="card chartcard chartcard-full">
+            <div class="cc-head">
+              <div><div class="eyebrow">Requests this month</div><div class="cc-num">47,318 <span class="cc-delta">↑ 23.4%</span></div></div>
+              <div class="range" id="ovRange"><button class="active" data-r="month">Month</button><button data-r="30d">30 days</button></div>
+            </div>
+            <div class="cc-plot">
+              <svg id="ovChart" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg>
+              <div class="cc-tip" id="ovTip"></div>
+            </div>
+            <div class="chart-x" id="ovX"><span>Aug 1</span><span>Aug 8</span><span>Aug 15</span><span>Aug 22</span><span>Aug 30</span></div>
+          </div>
+
+          <!-- ROW 3: activity log + api overview -->
+          <div class="drow-bot">
+            <div class="card card-pad actlog">
+              <div class="head"><div><h3>Activity Log</h3><div class="sub">All recent calls, keys, and quota events.</div></div><span class="seeall">See all</span></div>
+              <div class="actrow"><span class="ic">↧</span><div class="nm"><b>/v1/latest</b><small>base=USD · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>41 ms</b><small>2m ago</small></div></div>
+              <div class="actrow"><span class="ic">⇄</span><div class="nm"><b>/v1/convert</b><small>EUR→JPY · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>58 ms</b><small>6m ago</small></div></div>
+              <div class="actrow"><span class="ic">↧</span><div class="nm"><b>/v1/latest</b><small>base=GBP · staging</small></div><div class="stt fail"><span class="dot"></span>429</div><div class="amt"><b>—</b><small>17m ago</small></div></div>
+              <div class="actrow"><span class="ic">≡</span><div class="nm"><b>/v1/currencies</b><small>full list · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>12 ms</b><small>41m ago</small></div></div>
+              <div class="actrow"><span class="ic">⇄</span><div class="nm"><b>/v1/convert</b><small>USD→INR · ci-pipeline</small></div><div class="stt fail"><span class="dot"></span>401</div><div class="amt"><b>—</b><small>1h 04m ago</small></div></div>
+            </div>
+
+            <div class="card card-pad">
+              <div class="ov-head"><div><h3>API Overview</h3><div class="sub">47,318 requests this month</div></div><div class="ov-delta">23%↑</div></div>
+              <div class="seg"><i style="width:65%;background:var(--accent)"></i><i style="width:26%;background:#1c1917"></i><i style="width:9%;background:#f6b27a"></i></div>
+              <div class="seg-legend"><span><i class="sw" style="background:var(--accent)"></i>latest <b>30,914</b></span><span><i class="sw" style="background:#1c1917"></i>convert <b>12,466</b></span><span><i class="sw" style="background:#f6b27a"></i>currencies <b>3,938</b></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- API KEYS -->
+      <section id="keys" class="screen hidden">
+        <div class="page-head"><div><h2>API Keys</h2><p>Authenticate requests with the <span class="mono">X-API-Key</span> header.</p></div>
+          <button class="btn btn-primary" id="createKeyBtn">+ Create key</button></div>
+        <div class="card" id="keyList"><div class="empty">Loading…</div></div>
+      </section>
+
+      <!-- RATES -->
+      <section id="rates" class="screen hidden">
+        <div class="page-head"><div><h2>Live Rates</h2><p>Calls <span class="mono">/v1/latest</span> &amp; <span class="mono">/v1/convert</span> with an API key.</p></div></div>
+        <div class="card card-pad" style="margin-bottom:16px">
+          <div class="field" style="margin:0"><label>API key (kept only in this tab)</label>
+            <div style="display:flex;gap:8px"><input id="ratesKey" placeholder="myfx_live_… (auto-filled when you create a key)" />
+              <button class="btn btn-outline" id="saveKey">Save</button></div></div>
+        </div>
+        <div class="card card-pad" style="margin-bottom:16px">
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div class="field" style="margin:0;width:120px"><label>Base</label><input id="ratesBase" value="USD" /></div>
+            <button class="btn btn-primary" id="loadRates">Load rates</button>
+            <span class="mono" id="ratesMeta" style="color:var(--faint);font-size:12px"></span>
+          </div>
+          <div class="grid g4" id="ratesGrid" style="margin-top:16px"></div>
+        </div>
+        <div class="card card-pad">
+          <b>Convert</b>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px">
+            <div class="field" style="margin:0;width:110px"><label>Amount</label><input id="cvAmt" value="100" /></div>
+            <div class="field" style="margin:0;width:100px"><label>From</label><input id="cvFrom" value="USD" /></div>
+            <div class="field" style="margin:0;width:100px"><label>To</label><input id="cvTo" value="INR" /></div>
+            <button class="btn btn-primary" id="doConvert">Convert</button>
+            <span id="cvResult" style="font-weight:700"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- BILLING -->
+      <section id="billing" class="screen hidden">
+        <div class="page-head"><div><h2>Billing &amp; Plans</h2><p>Plans are illustrative — no payment is wired yet. <span class="badge expired">Sample</span></p></div></div>
+        <div class="grid g3">
+          <div class="card plan"><h3>Free</h3><div class="price">$0<small>/mo</small></div><ul><li>100,000 requests / mo</li><li>149 currencies</li><li>Daily updates</li></ul><button class="btn btn-outline" style="width:100%" disabled>Current plan</button></div>
+          <div class="card plan feat"><div class="tag">Popular</div><h3>Pro</h3><div class="price">$49<small>/mo</small></div><ul><li>1,000,000 requests / mo</li><li>Hourly updates</li><li>Priority support</li></ul><button class="btn btn-primary" style="width:100%" data-toast="Billing isn't wired yet">Upgrade</button></div>
+          <div class="card plan"><h3>Scale</h3><div class="price">$199<small>/mo</small></div><ul><li>10,000,000 requests / mo</li><li>Real-time add-on</li><li>SLA support</li></ul><button class="btn btn-outline" style="width:100%" data-toast="Billing isn't wired yet">Choose</button></div>
+        </div>
+      </section>
+
+      <!-- DOCS -->
+      <section id="docs" class="screen hidden">
+        <div class="page-head"><div><h2>Quickstart</h2><p>Send your key in the <span class="mono">X-API-Key</span> header.</p></div></div>
+        <div class="card card-pad" style="margin-bottom:14px"><b class="mono">GET /v1/latest</b>
+          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d1"></span>/v1/latest?base=USD"</div></div>
+        <div class="card card-pad" style="margin-bottom:14px"><b class="mono">GET /v1/convert</b>
+          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d2"></span>/v1/convert?from=USD&amp;to=INR&amp;amount=100"</div></div>
+        <div class="card card-pad"><b class="mono">GET /v1/currencies</b>
+          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d3"></span>/v1/currencies"</div></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="settings" class="screen hidden">
+        <div class="page-head"><div><h2>Settings</h2><p>Your account.</p></div></div>
+        <div class="card card-pad" style="max-width:600px">
+          <div class="set-row"><div class="k">Email</div><div class="v" id="stEmail">—</div></div>
+          <div class="set-row"><div class="k">Email status</div><div class="v" id="stVerified">—</div></div>
+          <div class="set-row"><div class="k">Sign-in method</div><div class="v" id="stProvider">—</div></div>
+          <div class="set-row"><div class="k">Member since</div><div class="v" id="stCreated">—</div></div>
+          <div class="set-row"><div class="k">Session</div><div class="v"><button class="btn btn-danger btn-sm" id="logoutBtn2">Log out</button></div></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- CREATE KEY MODAL -->
+<div class="scrim hidden" id="createScrim"><div class="modal">
+  <div id="createStep">
+    <h3>Create API key</h3><p class="desc">Give it a name to recognize it later.</p>
+    <div class="field"><label>Key name</label><input id="keyName" placeholder="e.g. production-server" /></div>
+    <div class="field"><label>Expiry</label><select id="keyExpiry"><option value="">Never</option><option value="30">30 days</option><option value="90">90 days</option></select></div>
+    <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-primary" id="createConfirm">Create key</button></div>
+  </div>
+  <div id="revealStep" class="hidden">
+    <h3>Your new API key</h3><p class="desc">Copy it now — it won't be shown again. (Saved to this tab so the Rates page can use it.)</p>
+    <div class="reveal"><span id="revealKey" style="flex:1"></span><button class="btn btn-primary btn-sm" id="copyKey">Copy</button></div>
+    <div class="modal-actions"><button class="btn btn-primary" data-close>Done</button></div>
+  </div>
+</div></div>
+
+<!-- REVOKE MODAL -->
+<div class="scrim hidden" id="revokeScrim"><div class="modal">
+  <h3>Revoke key?</h3><p class="desc">Revoking <b id="revokeName">this key</b> is permanent. Apps using it get <span class="mono">401</span> immediately.</p>
+  <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-danger" id="revokeConfirm">Revoke key</button></div>
+</div></div>
+
+<div class="toasts" id="toasts"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+meta {
+  name: Login
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "you@test.com",
+    "password": "password123"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.token) bru.setEnvVar("token", res.body.token);
+}
+
+docs {
+  Requires a verified email. Captures the session `token` on success.
+}

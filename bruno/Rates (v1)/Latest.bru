@@ -1,0 +1,23 @@
+meta {
+  name: Latest rates
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/v1/latest?base=USD
+  body: none
+  auth: none
+}
+
+params:query {
+  base: USD
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+docs {
+  All currencies relative to `base`. Requires a valid API key (X-API-Key).
+}

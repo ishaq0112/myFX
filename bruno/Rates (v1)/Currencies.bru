@@ -1,0 +1,19 @@
+meta {
+  name: Currencies
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/v1/currencies
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+docs {
+  The full list of supported currencies (~149). Requires X-API-Key.
+}

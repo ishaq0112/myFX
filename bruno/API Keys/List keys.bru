@@ -1,0 +1,19 @@
+meta {
+  name: List keys
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/keys
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Lists your keys (metadata only, never the secret).
+}

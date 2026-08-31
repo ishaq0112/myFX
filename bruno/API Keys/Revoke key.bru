@@ -1,0 +1,20 @@
+meta {
+  name: Revoke key
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/keys/{{keyId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+docs {
+  Revokes the key whose id is in `keyId` (auto-set by Create key, or copied
+  from List keys). Revoked keys immediately return 401 on /v1.
+}

@@ -1,0 +1,32 @@
+meta {
+  name: Create key
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/keys
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token}}
+}
+
+body:json {
+  {
+    "name": "bruno-test",
+    "expires_in_days": 90
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.key) bru.setEnvVar("apiKey", res.body.key);
+  if (res.body && res.body.api_key && res.body.api_key.id) bru.setEnvVar("keyId", res.body.api_key.id);
+}
+
+docs {
+  Needs a session token. The full secret is returned ONCE and captured into
+  `apiKey`; the key id into `keyId`. Omit `expires_in_days` for no expiry.
+}

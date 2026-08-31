@@ -48,7 +48,7 @@ export async function convert(amount, from = 'USD', to) {
 
   const fromCode = String(from).toUpperCase().trim();
   const toCode = String(to).toUpperCase().trim();
-  const { date, rates: eur } = await getEuroRates();
+  const { date, rates: eur, sources } = await getEuroRates();
 
   if (!(fromCode in eur)) throw new Error(`Unsupported currency: "${fromCode}".`);
   if (!(toCode in eur)) throw new Error(`Unsupported currency: "${toCode}".`);
@@ -61,5 +61,6 @@ export async function convert(amount, from = 'USD', to) {
     rate: Math.round(rate * 1e6) / 1e6,
     result: Math.round(value * rate * 100) / 100,
     date,
+    sources,
   };
 }

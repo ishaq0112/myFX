@@ -1,0 +1,16 @@
+meta {
+  name: Google sign-in
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/auth/google
+  body: none
+  auth: none
+}
+
+docs {
+  Redirects to Google's consent screen — open in a real browser, not the API
+  client. Returns 503 until GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET are set.
+}
