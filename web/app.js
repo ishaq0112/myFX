@@ -347,10 +347,15 @@ function renderOvChart() {
     if (dot) { dot.setAttribute('cx', m.X(i)); dot.setAttribute('cy', m.Y(val)); dot.style.opacity = 1; }
     const g = document.getElementById('ovGuide');
     if (g) { g.setAttribute('x1', m.X(i)); g.setAttribute('x2', m.X(i)); g.style.opacity = 1; }
-    tip.style.left = (m.X(i) / 1000) * r.width + 'px';
-    tip.style.top = (m.Y(val) / 240) * r.height + 'px';
-    tip.style.opacity = 1;
+    // Set content first so offsetWidth/Height are accurate, then clamp inside the plot
+    // (the card clips overflow, so an un-clamped tooltip gets cut at the edges).
     tip.innerHTML = `<b>Aug ${i + 1}</b>${Math.round(val * 24).toLocaleString()} requests`;
+    tip.style.opacity = 1;
+    const halfW = tip.offsetWidth / 2;
+    const rawLeft = (m.X(i) / 1000) * r.width;
+    tip.style.left = Math.max(halfW + 4, Math.min(r.width - halfW - 4, rawLeft)) + 'px';
+    const rawTop = (m.Y(val) / 240) * r.height;
+    tip.style.top = Math.max(tip.offsetHeight * 1.5, rawTop) + 'px';
   });
   svg.addEventListener('mouseleave', () => {
     tip.style.opacity = 0;
