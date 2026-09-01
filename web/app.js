@@ -75,8 +75,10 @@ $$('.pw-eye').forEach((b) => {
   };
 });
 
-// Google OAuth (server redirects to Google when GOOGLE_CLIENT_ID/SECRET are set).
-$('#googleBtn').onclick = () => { window.location.href = '/auth/google'; };
+// Google OAuth. Not configured on the server yet (no GOOGLE_CLIENT_ID/SECRET),
+// so avoid navigating to /auth/google (it returns a raw 503). Once creds are set,
+// restore: window.location.href = '/auth/google';
+$('#googleBtn').onclick = () => toast('Google sign-in isn’t enabled yet — continue with email.', 'info');
 
 setAuthMode('signup'); // sync initial UI state
 
@@ -146,6 +148,47 @@ async function doLogout() {
 $('#logoutBtn').onclick = doLogout;
 $('#logoutBtn2').onclick = doLogout;
 
+/* ============ SETTINGS ============ */
+const openScrim = (id) => $(id).classList.remove('hidden');
+const closeScrim = (id) => $(id).classList.add('hidden');
+
+// Profile: reflect the typed name in the sidebar/avatar immediately (not persisted in this demo).
+$('#saveProfile').onclick = () => {
+  const name = $('#setName').value.trim();
+  if (name) {
+    $('#welcomeName').textContent = name;
+    $('#setDisplayName').textContent = name;
+  }
+  toast('Profile updates aren’t saved in this demo yet.', 'info');
+};
+
+// Security
+$('#changePwBtn').onclick = () => { $('#pwNote').classList.add('hidden'); openScrim('#changePwScrim'); };
+$('#pwSubmit').onclick = () => {
+  const cur = $('#pwCurrent').value, nw = $('#pwNew').value, cf = $('#pwConfirm').value;
+  const note = (m) => { const n = $('#pwNote'); n.textContent = m; n.classList.remove('hidden'); };
+  if (!cur || !nw) return note('Fill in all fields.');
+  if (nw.length < 8) return note('New password must be at least 8 characters.');
+  if (nw !== cf) return note('New passwords don’t match.');
+  closeScrim('#changePwScrim');
+  ['#pwCurrent', '#pwNew', '#pwConfirm'].forEach((s) => ($(s).value = ''));
+  toast('Password change isn’t wired in this demo yet.', 'info');
+};
+
+$('#twofaToggle').onchange = (e) => {
+  toast(e.target.checked ? 'Two-factor auth isn’t active in this demo yet.' : 'Two-factor disabled.', 'info');
+};
+
+// Danger zone
+$('#deleteAcctBtn').onclick = () => { $('#delConfirmInput').value = ''; $('#deleteConfirm').disabled = true; openScrim('#deleteScrim'); };
+$('#delConfirmInput').oninput = (e) => {
+  $('#deleteConfirm').disabled = !ME || e.target.value.trim().toLowerCase() !== (ME.email || '').toLowerCase();
+};
+$('#deleteConfirm').onclick = () => {
+  closeScrim('#deleteScrim');
+  toast('Account deletion isn’t wired in this demo yet.', 'info');
+};
+
 /* ============ ENTER APP ============ */
 async function enterApp() {
   const { ok, data } = await api('/auth/me', { auth: true });
@@ -159,10 +202,14 @@ async function enterApp() {
   $('#sideAvatar').textContent = initial;
   $('#sideEmail').textContent = ME.email;
   // settings
-  $('#stEmail').textContent = ME.email;
+  $('#setAvatar').textContent = initial;
+  $('#setDisplayName').textContent = display;
+  $('#setName').value = hasName ? ME.name.trim() : '';
+  $('#setEmailInput').value = ME.email;
   $('#stVerified').innerHTML = ME.email_verified ? '<span class="badge active">✓ Verified</span>' : '<span class="badge suspended">Unverified</span>';
-  $('#stProvider').textContent = ME.auth_provider || 'password';
-  $('#stCreated').textContent = ME.created_at ? new Date(ME.created_at).toLocaleDateString() : '—';
+  $('#stProvider').textContent = ME.auth_provider === 'google' ? 'Google' : 'Email & password';
+  $('#setJoined').textContent = 'Member since ' + (ME.created_at ? new Date(ME.created_at).toLocaleDateString() : '—');
+  $('#delEmail').textContent = ME.email;
   // API keys page footer
   const fd = $('#footDate'); if (fd) fd.textContent = fmtDate(ME.created_at);
   const fa = $('#footAuth'); if (fa) fa.textContent = ME.auth_provider === 'google' ? 'Google' : 'Password';

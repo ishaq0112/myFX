@@ -4,6 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>MyFX — Developer Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -61,12 +64,12 @@
       <b id="welcomeName">—</b>
     </div>
     <nav class="nav" id="nav">
-      <button class="active" data-screen="overview"><span class="ic">🏠</span> Dashboard</button>
-      <button data-screen="keys"><span class="ic">🔑</span> API Keys</button>
-      <button data-screen="rates"><span class="ic">💱</span> Rates</button>
-      <button data-screen="billing"><span class="ic">💳</span> Billing</button>
-      <button data-screen="docs"><span class="ic">📖</span> Docs</button>
-      <button data-screen="settings"><span class="ic">⚙️</span> Settings</button>
+      <button class="active" data-screen="overview"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.2 12 3l9 7.2"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9.5 21v-6h5v6"/></svg></span> Dashboard</button>
+      <button data-screen="keys"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5 5 0 1 1-7.07 7.07 5 5 0 0 1 7.07-7.07zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span> API Keys</button>
+      <button data-screen="rates"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span> Rates</button>
+      <button data-screen="billing"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></span> Billing</button>
+      <button data-screen="docs"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6M9 9h1"/></svg></span> Docs</button>
+      <button data-screen="settings"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span> Settings</button>
     </nav>
     <div class="side-spacer"></div>
     <div class="side-usage">
@@ -101,16 +104,16 @@
           <!-- ROW 1: stat cards + quick actions -->
           <div class="drow-top">
             <div class="mini-stats">
-              <div class="mini"><div class="mtop"><span class="mi t1">📊</span><div class="k">Requests this month</div></div><div class="v">47,318</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t2">📅</span><div class="k">Requests today</div></div><div class="v">1,842</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t3">🔑</span><div class="k">Active keys</div></div><div class="v" id="stKeys">—</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t4">⚠️</span><div class="k">Error rate</div></div><div class="v">0.31%</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><div class="k">Requests this month</div></div><div class="v">47,318</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="k">Requests today</div></div><div class="v">1,842</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5 5 0 1 1-7.07 7.07 5 5 0 0 1 7.07-7.07zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span><div class="k">Active keys</div></div><div class="v" id="stKeys">—</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="k">Error rate</div></div><div class="v">0.31%</div></div>
             </div>
             <div class="card card-pad qa-card">
               <h3>Quick Actions</h3>
               <div class="qa">
-                <button id="heroCreate"><span>＋</span>New key</button>
-                <button data-goto="billing"><span>💳</span>Plans</button>
+                <button id="heroCreate"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>New key</button>
+                <button data-goto="billing"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg></span>Plans</button>
               </div>
             </div>
           </div>
@@ -132,11 +135,11 @@
           <div class="drow-bot">
             <div class="card card-pad actlog">
               <div class="head"><div><h3>Activity Log</h3><div class="sub">All recent calls, keys, and quota events.</div></div><span class="seeall">See all</span></div>
-              <div class="actrow"><span class="ic">↧</span><div class="nm"><b>/v1/latest</b><small>base=USD · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>41 ms</b><small>2m ago</small></div></div>
-              <div class="actrow"><span class="ic">⇄</span><div class="nm"><b>/v1/convert</b><small>EUR→JPY · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>58 ms</b><small>6m ago</small></div></div>
-              <div class="actrow"><span class="ic">↧</span><div class="nm"><b>/v1/latest</b><small>base=GBP · staging</small></div><div class="stt fail"><span class="dot"></span>429</div><div class="amt"><b>—</b><small>17m ago</small></div></div>
-              <div class="actrow"><span class="ic">≡</span><div class="nm"><b>/v1/currencies</b><small>full list · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>12 ms</b><small>41m ago</small></div></div>
-              <div class="actrow"><span class="ic">⇄</span><div class="nm"><b>/v1/convert</b><small>USD→INR · ci-pipeline</small></div><div class="stt fail"><span class="dot"></span>401</div><div class="amt"><b>—</b><small>1h 04m ago</small></div></div>
+              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span><div class="nm"><b>/v1/latest</b><small>base=USD · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>41 ms</b><small>2m ago</small></div></div>
+              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="nm"><b>/v1/convert</b><small>EUR→JPY · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>58 ms</b><small>6m ago</small></div></div>
+              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span><div class="nm"><b>/v1/latest</b><small>base=GBP · staging</small></div><div class="stt fail"><span class="dot"></span>429</div><div class="amt"><b>—</b><small>17m ago</small></div></div>
+              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span><div class="nm"><b>/v1/currencies</b><small>full list · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>12 ms</b><small>41m ago</small></div></div>
+              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="nm"><b>/v1/convert</b><small>USD→INR · ci-pipeline</small></div><div class="stt fail"><span class="dot"></span>401</div><div class="amt"><b>—</b><small>1h 04m ago</small></div></div>
             </div>
 
             <div class="card card-pad">
@@ -162,7 +165,7 @@
           </div>
           <div id="keyList"></div>
           <div class="k-empty hidden" id="keyEmpty">
-            <div class="ke-icon">🔑</div>
+            <div class="ke-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5 5 0 1 1-7.07 7.07 5 5 0 0 1 7.07-7.07zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></div>
             <div class="ke-title">No API keys yet</div>
             <div class="ke-sub">Create one to start calling the MyFX API.</div>
             <button class="btn btn-primary btn-sm" onclick="openCreate()" style="margin-top:14px">+ Create key</button>
@@ -235,15 +238,15 @@
         </div></div>
 
         <div class="plans">
-          <!-- Starter -->
+          <!-- Free -->
           <div class="planc">
-            <div class="planc-top"><div class="planc-name">Starter</div><span class="planc-badge">Current</span></div>
+            <div class="planc-top"><div class="planc-name">Free</div><span class="planc-badge">Current</span></div>
             <div class="planc-price"><span class="amt" data-m="$0" data-y="$0">$0</span><span class="per">/ month</span></div>
             <p class="planc-billed">&nbsp;</p>
             <p class="planc-desc">For side projects and trying out the API.</p>
             <button class="btn btn-outline planc-cta" disabled>Current plan</button>
             <ul class="planc-feats">
-              <li>10,000 requests / month</li>
+              <li>100,000 requests / month</li>
               <li>All 149 currencies</li>
               <li>Daily rate updates</li>
               <li>Latest &amp; convert endpoints</li>
@@ -260,8 +263,8 @@
             <p class="planc-desc">Everything you need to scale with confidence: more headroom, fresher rates, and support that has your back.</p>
             <button class="btn btn-primary planc-cta" data-toast="Checkout isn't connected in this demo yet.">Upgrade to Pro</button>
             <ul class="planc-feats">
-              <li class="feat-lead">Everything in Starter, plus:</li>
-              <li>1,000,000 requests / month (100× more)</li>
+              <li class="feat-lead">Everything in Free, plus:</li>
+              <li>1,000,000 requests / month (10× more)</li>
               <li>Fresh rates, updated every hour</li>
               <li>Historical rates endpoint</li>
               <li>Priority email support</li>
@@ -300,9 +303,9 @@
             <div class="bl-label inv-head">Invoices</div>
             <div class="inv-list">
               <div class="inv-row"><span class="inv-date">Aug 1, 2026</span><span class="inv-id">in_4Kp29QdX</span><span class="inv-amt">$0.00</span><span class="inv-st">paid</span></div>
-              <div class="inv-row"><span class="inv-date">Jul 1, 2026</span><span class="inv-id">in_9Vb01LmR</span><span class="inv-amt">$29.00</span><span class="inv-st">paid</span></div>
-              <div class="inv-row"><span class="inv-date">Jun 1, 2026</span><span class="inv-id">in_2Tz84HcW</span><span class="inv-amt">$29.00</span><span class="inv-st refunded">refunded</span></div>
-              <div class="inv-row"><span class="inv-date">May 1, 2026</span><span class="inv-id">in_7Nq55BfE</span><span class="inv-amt">$29.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jul 1, 2026</span><span class="inv-id">in_9Vb01LmR</span><span class="inv-amt">$49.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jun 1, 2026</span><span class="inv-id">in_2Tz84HcW</span><span class="inv-amt">$49.00</span><span class="inv-st refunded">refunded</span></div>
+              <div class="inv-row"><span class="inv-date">May 1, 2026</span><span class="inv-id">in_7Nq55BfE</span><span class="inv-amt">$49.00</span><span class="inv-st">paid</span></div>
             </div>
           </div>
         </div>
@@ -401,7 +404,7 @@ res = requests.get(
                 <div class="code-block">
 <pre>{
   "provider": "MyFX",
-  "source": "ECB + NBP",
+  "source": "European Central Bank + National Bank of Poland",
   "base": "USD",
   "date": "2026-09-01",
   "count": 149,
@@ -453,7 +456,7 @@ res = requests.get(
                 <div class="code-block">
 <pre>{
   "provider": "MyFX",
-  "source": "ECB + NBP",
+  "source": "European Central Bank + National Bank of Poland",
   "from": "USD",
   "to": "INR",
   "amount": 100,
@@ -496,7 +499,7 @@ res = requests.get(
 <pre>{
   "provider": "MyFX",
   "count": 149,
-  "sources": ["ECB", "NBP"],
+  "sources": ["European Central Bank", "National Bank of Poland"],
   "currencies": [
     { "code": "AED", "name": "UAE Dirham" },
     { "code": "AFN", "name": "Afghan Afghani" }
@@ -560,7 +563,7 @@ res = requests.get(
                 <table class="doc-table">
                   <thead><tr><th>Plan</th><th>Included requests</th><th>Updates</th></tr></thead>
                   <tbody>
-                    <tr><td>Starter</td><td>10,000 / month</td><td>Daily</td></tr>
+                    <tr><td>Free</td><td>100,000 / month</td><td>Daily</td></tr>
                     <tr><td>Pro</td><td>1,000,000 / month</td><td>Hourly</td></tr>
                     <tr><td>Scale</td><td>10,000,000 / month</td><td>Real-time</td></tr>
                   </tbody>
@@ -587,13 +590,42 @@ res = requests.get(
 
       <!-- SETTINGS -->
       <section id="settings" class="screen hidden">
-        <div class="page-head"><div><h2>Settings</h2><p>Your account.</p></div></div>
-        <div class="card card-pad" style="max-width:600px">
-          <div class="set-row"><div class="k">Email</div><div class="v" id="stEmail">—</div></div>
-          <div class="set-row"><div class="k">Email status</div><div class="v" id="stVerified">—</div></div>
-          <div class="set-row"><div class="k">Sign-in method</div><div class="v" id="stProvider">—</div></div>
-          <div class="set-row"><div class="k">Member since</div><div class="v" id="stCreated">—</div></div>
-          <div class="set-row"><div class="k">Session</div><div class="v"><button class="btn btn-danger btn-sm" id="logoutBtn2">Log out</button></div></div>
+        <div class="page-head"><div><h2>Settings</h2><p>Manage your account and security.</p></div></div>
+        <div class="set-wrap">
+
+          <!-- Profile -->
+          <div class="card card-pad set-card">
+            <div class="set-h"><h3>Profile</h3><p>Your profile and account details.</p></div>
+            <div class="set-profile">
+              <div class="set-avatar" id="setAvatar">?</div>
+              <div class="set-profile-meta">
+                <div class="set-name-line"><b id="setDisplayName">—</b> <span class="plan-chip" data-goto="billing">Free plan</span></div>
+                <div class="set-sub" id="setJoined">Member since —</div>
+              </div>
+            </div>
+            <div class="field"><label>Name</label><input id="setName" placeholder="Your name" /></div>
+            <div class="field"><label>Email</label>
+              <div class="set-email-row"><input id="setEmailInput" type="email" disabled /><span id="stVerified"></span></div>
+            </div>
+            <div class="set-actions"><button class="btn btn-primary" id="saveProfile">Save changes</button></div>
+          </div>
+
+          <!-- Security -->
+          <div class="card card-pad set-card">
+            <div class="set-h"><h3>Security</h3><p>Keep your account protected.</p></div>
+            <div class="set-row"><div><div class="k2">Sign-in method</div><div class="set-sub" id="stProvider">—</div></div></div>
+            <div class="set-row"><div><div class="k2">Password</div><div class="set-sub">Change the password you use to sign in.</div></div><button class="btn btn-outline btn-sm" id="changePwBtn">Change password</button></div>
+            <div class="set-row"><div><div class="k2">Two-factor authentication</div><div class="set-sub">Add an extra layer of security at sign-in.</div></div>
+              <label class="switch"><input type="checkbox" id="twofaToggle"><span class="switch-slider"></span></label></div>
+            <div class="set-row"><div><div class="k2">Active session</div><div class="set-sub">Sign out of MyFX on this device.</div></div><button class="btn btn-outline btn-sm" id="logoutBtn2">Log out</button></div>
+          </div>
+
+          <!-- Danger zone -->
+          <div class="card card-pad set-card danger-card">
+            <div class="set-h"><h3>Danger zone</h3><p>Irreversible actions. Proceed with care.</p></div>
+            <div class="set-row"><div><div class="k2">Delete account</div><div class="set-sub">Permanently remove your account, API keys, and data.</div></div><button class="btn btn-danger btn-sm" id="deleteAcctBtn">Delete account</button></div>
+          </div>
+
         </div>
       </section>
 
@@ -620,6 +652,23 @@ res = requests.get(
 <div class="scrim hidden" id="revokeScrim"><div class="modal">
   <h3>Revoke key?</h3><p class="desc">Revoking <b id="revokeName">this key</b> is permanent. Apps using it get <span class="mono">401</span> immediately.</p>
   <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-danger" id="revokeConfirm">Revoke key</button></div>
+</div></div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="scrim hidden" id="changePwScrim"><div class="modal">
+  <h3>Change password</h3><p class="desc">Enter your current password and choose a new one.</p>
+  <div class="field"><label>Current password</label><input id="pwCurrent" type="password" placeholder="Current password" /></div>
+  <div class="field"><label>New password</label><input id="pwNew" type="password" placeholder="At least 8 characters" /></div>
+  <div class="field"><label>Confirm new password</label><input id="pwConfirm" type="password" placeholder="Re-enter new password" /></div>
+  <div id="pwNote" class="note err hidden"></div>
+  <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-primary" id="pwSubmit">Update password</button></div>
+</div></div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="scrim hidden" id="deleteScrim"><div class="modal">
+  <h3>Delete account?</h3><p class="desc">This permanently removes your account, API keys, and data. This cannot be undone. Type your email <b id="delEmail">your email</b> to confirm.</p>
+  <div class="field"><label>Confirm email</label><input id="delConfirmInput" type="email" placeholder="you@email.com" /></div>
+  <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-danger" id="deleteConfirm" disabled>Delete my account</button></div>
 </div></div>
 
 <div class="toasts" id="toasts"></div>
