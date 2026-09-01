@@ -11,16 +11,42 @@
 <!-- ============ AUTH (logged out) ============ -->
 <section id="auth">
   <div class="auth-card">
-    <div class="brand"><span class="mark">M</span> My<span>FX</span></div>
-    <div class="tabs" id="authTabs">
-      <button class="active" data-mode="login">Log in</button>
-      <button data-mode="signup">Sign up</button>
+    <div class="auth-left">
+      <div class="al-brand"><span class="al-mark">✦</span> My<span>FX</span></div>
+      <div class="al-mid">
+        <h2>Live exchange rates,<br>done right.</h2>
+        <p>Mid-market rates across 149 currencies, from official central-bank feeds, served through one clean API.</p>
+        <ul class="al-points">
+          <li>149 currencies, updated daily</li>
+          <li>One key · simple REST endpoints</li>
+          <li>Transparent, honest pricing</li>
+        </ul>
+      </div>
     </div>
-    <div class="field hidden" id="nameField"><label>Name</label><input id="authName" placeholder="Your name" /></div>
-    <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="you@email.com" /></div>
-    <div class="field"><label>Password</label><input id="authPass" type="password" placeholder="••••••••" /></div>
-    <button class="btn btn-primary" id="authSubmit" style="width:100%">Log in</button>
-    <div id="authNote" class="note info hidden"></div>
+
+    <div class="auth-right">
+      <h2 id="authHeading">Create an account</h2>
+      <p class="ar-sub" id="authSub">Sign up to get started. Enter your details below.</p>
+
+      <div class="field" id="nameField"><label>Name</label><input id="authName" placeholder="Your name" /></div>
+      <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="Enter email address" /></div>
+      <div class="field"><label>Password</label>
+        <div class="pw"><input id="authPass" type="password" placeholder="Enter password" />
+          <button type="button" class="pw-eye" data-eye="authPass" aria-label="Show password"><svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div>
+      </div>
+      <div class="field" id="confirmField"><label>Confirm password</label>
+        <div class="pw"><input id="authConfirm" type="password" placeholder="Enter same password" />
+          <button type="button" class="pw-eye" data-eye="authConfirm" aria-label="Show password"><svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div>
+      </div>
+
+      <button class="btn btn-primary" id="authSubmit" style="width:100%;margin-top:6px">Create account</button>
+      <div id="authNote" class="note info hidden"></div>
+
+      <div class="ar-div"><span>or continue with</span></div>
+      <button class="btn btn-outline ar-oauth" id="googleBtn" style="width:100%">Continue with Google</button>
+
+      <div class="ar-switch"><span id="authSwitchText">Already have an account?</span> <a id="authToggle">Log in</a></div>
+    </div>
   </div>
 </section>
 
@@ -124,46 +150,161 @@
 
       <!-- API KEYS -->
       <section id="keys" class="screen hidden">
-        <div class="page-head"><div><h2>API Keys</h2><p>Authenticate requests with the <span class="mono">X-API-Key</span> header.</p></div>
-          <button class="btn btn-primary" id="createKeyBtn">+ Create key</button></div>
-        <div class="card" id="keyList"><div class="empty">Loading…</div></div>
+        <div class="page-head"><div><h2>API keys</h2><p>Authenticate every request with the <span class="mono">X-API-Key</span> header. Keys are shown once, at creation.</p></div></div>
+
+        <div class="card keys-card">
+          <div class="keys-head">
+            <div class="kh-title">Your keys · <span id="keyCount">0</span></div>
+            <div class="kh-actions">
+              <button class="btn btn-outline btn-sm" id="previewEmptyBtn">Preview empty state</button>
+              <button class="btn btn-primary btn-sm" id="createKeyBtn">+ Create key</button>
+            </div>
+          </div>
+          <div id="keyList"></div>
+          <div class="k-empty hidden" id="keyEmpty">
+            <div class="ke-icon">🔑</div>
+            <div class="ke-title">No API keys yet</div>
+            <div class="ke-sub">Create one to start calling the MyFX API.</div>
+            <button class="btn btn-primary btn-sm" onclick="openCreate()" style="margin-top:14px">+ Create key</button>
+          </div>
+        </div>
+
+        <div class="card qs-card">
+          <div class="qs-head"><h3>Quick start</h3><div class="sub">Mid-market rates · 149 currencies · updated daily.</div></div>
+          <div class="qs-body">
+            <div class="qs-pills" id="epPills">
+              <button class="ep-pill active" data-ep="latest">/v1/latest</button>
+              <button class="ep-pill" data-ep="convert">/v1/convert</button>
+              <button class="ep-pill" data-ep="currencies">/v1/currencies</button>
+            </div>
+            <div class="qs-code"><button class="btn btn-outline btn-sm qs-copy" id="qsCopy">Copy</button><pre id="qsSnippet"></pre></div>
+            <div class="qs-caption" id="qsCaption"></div>
+          </div>
+        </div>
+
+        <div class="keys-foot">Signed up <span id="footDate">—</span> · <span id="footAuth">—</span> account · <a data-goto="docs" style="cursor:pointer">Docs</a> · <a href="/health" target="_blank" rel="noopener">Status</a></div>
       </section>
 
       <!-- RATES -->
       <section id="rates" class="screen hidden">
-        <div class="page-head"><div><h2>Live Rates</h2><p>Calls <span class="mono">/v1/latest</span> &amp; <span class="mono">/v1/convert</span> with an API key.</p></div></div>
-        <div class="card card-pad" style="margin-bottom:16px">
-          <div class="field" style="margin:0"><label>API key (kept only in this tab)</label>
-            <div style="display:flex;gap:8px"><input id="ratesKey" placeholder="myfx_live_… (auto-filled when you create a key)" />
-              <button class="btn btn-outline" id="saveKey">Save</button></div></div>
-        </div>
-        <div class="card card-pad" style="margin-bottom:16px">
-          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
-            <div class="field" style="margin:0;width:120px"><label>Base</label><input id="ratesBase" value="USD" /></div>
-            <button class="btn btn-primary" id="loadRates">Load rates</button>
-            <span class="mono" id="ratesMeta" style="color:var(--faint);font-size:12px"></span>
+        <div class="page-head"><div><h2>Live rates</h2><p>Explore mid-market rates and convert across 149 currencies.</p></div></div>
+
+        <div class="card card-pad rk-card">
+          <div class="rk-row">
+            <div class="rk-left"><span class="rk-dot" id="rkDot"></span><div><div class="rk-title">API key</div><div class="rk-sub">Kept only in this tab · authenticates your <span class="mono">/v1</span> calls.</div></div></div>
+            <div class="rk-input"><input id="ratesKey" placeholder="myfx_live_…" /><button class="btn btn-outline btn-sm" id="saveKey">Save</button></div>
           </div>
-          <div class="grid g4" id="ratesGrid" style="margin-top:16px"></div>
         </div>
-        <div class="card card-pad">
-          <b>Convert</b>
-          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:10px">
-            <div class="field" style="margin:0;width:110px"><label>Amount</label><input id="cvAmt" value="100" /></div>
-            <div class="field" style="margin:0;width:100px"><label>From</label><input id="cvFrom" value="USD" /></div>
-            <div class="field" style="margin:0;width:100px"><label>To</label><input id="cvTo" value="INR" /></div>
-            <button class="btn btn-primary" id="doConvert">Convert</button>
-            <span id="cvResult" style="font-weight:700"></span>
+
+        <div class="card rates-card">
+          <div class="rates-head">
+            <div class="rh-tools">
+              <div class="field" style="margin:0;width:160px"><label>Base currency</label><select id="ratesBase" class="cur-select"><option value="USD">USD</option></select></div>
+              <button class="btn btn-primary" id="loadRates">Load rates</button>
+            </div>
+            <div class="rates-meta mono" id="ratesMeta"></div>
+          </div>
+          <div class="rates-body">
+            <div class="grid g4" id="ratesGrid"><div class="rates-empty">Pick a base currency and hit <b>Load rates</b> to see live rates.</div></div>
+          </div>
+        </div>
+
+        <div class="card conv-card">
+          <div class="rates-head"><div class="ch-title">Convert</div></div>
+          <div class="rates-body">
+            <div class="conv-row">
+              <div class="field" style="margin:0"><label>Amount</label><input id="cvAmt" value="100" style="width:130px" /></div>
+              <div class="field" style="margin:0"><label>From</label><select id="cvFrom" class="cur-select"><option value="USD">USD</option></select></div>
+              <span class="conv-arrow">→</span>
+              <div class="field" style="margin:0"><label>To</label><select id="cvTo" class="cur-select"><option value="INR">INR</option></select></div>
+              <button class="btn btn-primary" id="doConvert">Convert</button>
+            </div>
+            <div class="conv-result" id="cvResult"></div>
           </div>
         </div>
       </section>
 
       <!-- BILLING -->
       <section id="billing" class="screen hidden">
-        <div class="page-head"><div><h2>Billing &amp; Plans</h2><p>Plans are illustrative — no payment is wired yet. <span class="badge expired">Sample</span></p></div></div>
-        <div class="grid g3">
-          <div class="card plan"><h3>Free</h3><div class="price">$0<small>/mo</small></div><ul><li>100,000 requests / mo</li><li>149 currencies</li><li>Daily updates</li></ul><button class="btn btn-outline" style="width:100%" disabled>Current plan</button></div>
-          <div class="card plan feat"><div class="tag">Popular</div><h3>Pro</h3><div class="price">$49<small>/mo</small></div><ul><li>1,000,000 requests / mo</li><li>Hourly updates</li><li>Priority support</li></ul><button class="btn btn-primary" style="width:100%" data-toast="Billing isn't wired yet">Upgrade</button></div>
-          <div class="card plan"><h3>Scale</h3><div class="price">$199<small>/mo</small></div><ul><li>10,000,000 requests / mo</li><li>Real-time add-on</li><li>SLA support</li></ul><button class="btn btn-outline" style="width:100%" data-toast="Billing isn't wired yet">Choose</button></div>
+        <div class="page-head"><div><h2>Plans &amp; Pricing</h2><p>Simple, transparent pricing. Scale as you grow, cancel anytime.</p></div></div>
+
+        <div class="bill-toggle"><div class="bt-seg" id="billToggle">
+          <span class="bt-ind" aria-hidden="true"></span>
+          <button class="active" data-cycle="monthly">Monthly</button>
+          <button data-cycle="yearly">Yearly</button>
+        </div></div>
+
+        <div class="plans">
+          <!-- Starter -->
+          <div class="planc">
+            <div class="planc-top"><div class="planc-name">Starter</div><span class="planc-badge">Current</span></div>
+            <div class="planc-price"><span class="amt" data-m="$0" data-y="$0">$0</span><span class="per">/ month</span></div>
+            <p class="planc-billed">&nbsp;</p>
+            <p class="planc-desc">For side projects and trying out the API.</p>
+            <button class="btn btn-outline planc-cta" disabled>Current plan</button>
+            <ul class="planc-feats">
+              <li>10,000 requests / month</li>
+              <li>All 149 currencies</li>
+              <li>Daily rate updates</li>
+              <li>Latest &amp; convert endpoints</li>
+              <li>Community support</li>
+            </ul>
+          </div>
+
+          <!-- Pro (featured) -->
+          <div class="planc feat">
+            <div class="planc-ribbon">★ Most popular</div>
+            <div class="planc-top"><div class="planc-name">Pro</div><span class="planc-badge">Save 20%</span></div>
+            <div class="planc-price"><span class="amt" data-m="$49" data-y="$39">$49</span><span class="per">/ month</span></div>
+            <p class="planc-billed">&nbsp;</p>
+            <p class="planc-desc">Everything you need to scale with confidence: more headroom, fresher rates, and support that has your back.</p>
+            <button class="btn btn-primary planc-cta" data-toast="Checkout isn't connected in this demo yet.">Upgrade to Pro</button>
+            <ul class="planc-feats">
+              <li class="feat-lead">Everything in Starter, plus:</li>
+              <li>1,000,000 requests / month (100× more)</li>
+              <li>Fresh rates, updated every hour</li>
+              <li>Historical rates endpoint</li>
+              <li>Priority email support</li>
+              <li>99.9% uptime SLA</li>
+            </ul>
+          </div>
+
+          <!-- Scale -->
+          <div class="planc">
+            <div class="planc-top"><div class="planc-name">Scale</div><span class="planc-badge">Save 25%</span></div>
+            <div class="planc-price"><span class="amt" data-m="$199" data-y="$149">$199</span><span class="per">/ month</span></div>
+            <p class="planc-billed">&nbsp;</p>
+            <p class="planc-desc">For high-volume platforms that need real-time data and support.</p>
+            <button class="btn btn-outline planc-cta" data-toast="Checkout isn't connected in this demo yet.">Choose Scale</button>
+            <ul class="planc-feats">
+              <li>10,000,000 requests / month</li>
+              <li>Real-time rate updates</li>
+              <li>Custom base currencies</li>
+              <li>Priority support</li>
+              <li>Dedicated SLA &amp; onboarding</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="bill-lower">
+          <div class="card card-pad pay-card">
+            <div class="bl-label">Payment method</div>
+            <div class="pay-row">
+              <div class="pay-info"><span class="pay-brand">Visa</span> <span class="pay-dots">•••• 4242</span> <span class="pay-exp">exp 04/29</span></div>
+              <button class="btn btn-outline btn-sm" data-toast="Payment updates aren't wired in this demo.">Update</button>
+            </div>
+            <p class="pay-note">No overage billing on Free. Requests are rejected at the quota instead.</p>
+          </div>
+
+          <div class="card inv-card">
+            <div class="bl-label inv-head">Invoices</div>
+            <div class="inv-list">
+              <div class="inv-row"><span class="inv-date">Aug 1, 2026</span><span class="inv-id">in_4Kp29QdX</span><span class="inv-amt">$0.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jul 1, 2026</span><span class="inv-id">in_9Vb01LmR</span><span class="inv-amt">$29.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jun 1, 2026</span><span class="inv-id">in_2Tz84HcW</span><span class="inv-amt">$29.00</span><span class="inv-st refunded">refunded</span></div>
+              <div class="inv-row"><span class="inv-date">May 1, 2026</span><span class="inv-id">in_7Nq55BfE</span><span class="inv-amt">$29.00</span><span class="inv-st">paid</span></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -199,7 +340,7 @@
   <div id="createStep">
     <h3>Create API key</h3><p class="desc">Give it a name to recognize it later.</p>
     <div class="field"><label>Key name</label><input id="keyName" placeholder="e.g. production-server" /></div>
-    <div class="field"><label>Expiry</label><select id="keyExpiry"><option value="">Never</option><option value="30">30 days</option><option value="90">90 days</option></select></div>
+    <div class="field"><label>Expiry</label><select id="keyExpiry" class="cur-select"><option value="">Never</option><option value="30">30 days</option><option value="90">90 days</option></select></div>
     <div class="modal-actions"><button class="btn btn-outline" data-close>Cancel</button><button class="btn btn-primary" id="createConfirm">Create key</button></div>
   </div>
   <div id="revealStep" class="hidden">

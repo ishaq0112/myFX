@@ -15,6 +15,7 @@
 
 import express from 'express';
 import { getRates, convert } from './src/rateEngine.js';
+import { CURRENCY_NAMES } from './src/currencyNames.js';
 import { ensureStore, storeMode } from './src/dataSource.js';
 import authRouter from './src/auth/routes.js';
 import { initAuth, authAvailable } from './src/auth/store.js';
@@ -75,7 +76,7 @@ app.get('/v1/currencies', async (_req, res) => {
       provider: PROVIDER,
       count: Object.keys(rates).length,
       sources,
-      currencies: Object.keys(rates).sort(),
+      currencies: Object.keys(rates).sort().map((c) => ({ code: c, name: CURRENCY_NAMES[c] || null })),
     });
   } catch (err) {
     res.status(500).json({ provider: PROVIDER, error: err.message });
