@@ -310,13 +310,279 @@
 
       <!-- DOCS -->
       <section id="docs" class="screen hidden">
-        <div class="page-head"><div><h2>Quickstart</h2><p>Send your key in the <span class="mono">X-API-Key</span> header.</p></div></div>
-        <div class="card card-pad" style="margin-bottom:14px"><b class="mono">GET /v1/latest</b>
-          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d1"></span>/v1/latest?base=USD"</div></div>
-        <div class="card card-pad" style="margin-bottom:14px"><b class="mono">GET /v1/convert</b>
-          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d2"></span>/v1/convert?from=USD&amp;to=INR&amp;amount=100"</div></div>
-        <div class="card card-pad"><b class="mono">GET /v1/currencies</b>
-          <div class="code" style="margin-top:8px">curl -H "<span class="fl">X-API-Key</span>: myfx_live_…" "<span id="d3"></span>/v1/currencies"</div></div>
+        <div class="page-head"><div><h2>API Documentation</h2><p>Everything you need to integrate the MyFX exchange-rate API.</p></div></div>
+
+        <div class="docs-wrap">
+          <aside class="docs-nav" id="docsNav">
+            <a href="#doc-start" class="active">Getting started</a>
+            <a href="#doc-endpoints">Endpoints</a>
+            <a href="#doc-fields">Response fields</a>
+            <a href="#doc-errors">Errors</a>
+            <a href="#doc-limits">Rate limits</a>
+            <a href="#doc-data">Data &amp; freshness</a>
+          </aside>
+
+          <div class="docs-body">
+            <!-- Getting started -->
+            <section id="doc-start" class="doc-section">
+              <h3>Getting started</h3>
+              <p class="doc-lead">The MyFX API is a REST API that returns JSON. All endpoints live under the base URL below and require an API key.</p>
+
+              <div class="doc-params" style="margin-bottom:18px">
+                <div class="dp-row"><span class="dp-name">Base URL</span><span class="dp-type"></span><span class="dp-desc"><code>https://api.myfx.dev</code></span></div>
+                <div class="dp-row"><span class="dp-name">Auth header</span><span class="dp-type"></span><span class="dp-desc"><code>X-API-Key: myfx_live_…</code> on every request</span></div>
+              </div>
+
+              <p class="doc-p">Create a key on the <a class="doc-link" data-goto="keys">API Keys</a> page, then send it in the <code>X-API-Key</code> header. Here's your first request:</p>
+
+              <div class="code-tabs" data-ct>
+                <div class="ct-head">
+                  <div class="ct-langs">
+                    <button class="active" data-lang="curl">cURL</button>
+                    <button data-lang="js">JavaScript</button>
+                    <button data-lang="py">Python</button>
+                  </div>
+                  <button class="ct-copy">Copy</button>
+                </div>
+<pre class="ct-panel active" data-lang="curl">curl "https://api.myfx.dev/v1/latest?base=USD" \
+  -H "X-API-Key: myfx_live_xxxxxxxx"</pre>
+<pre class="ct-panel" data-lang="js">const res = await fetch("https://api.myfx.dev/v1/latest?base=USD", {
+  headers: { "X-API-Key": "myfx_live_xxxxxxxx" }
+});
+const data = await res.json();
+console.log(data.rates.EUR);</pre>
+<pre class="ct-panel" data-lang="py">import requests
+
+res = requests.get(
+    "https://api.myfx.dev/v1/latest",
+    params={"base": "USD"},
+    headers={"X-API-Key": "myfx_live_xxxxxxxx"},
+)
+print(res.json()["rates"]["EUR"])</pre>
+              </div>
+            </section>
+
+            <!-- Endpoints -->
+            <section id="doc-endpoints" class="doc-section">
+              <h3>Endpoints</h3>
+              <p class="doc-lead">Three read-only endpoints. All return <code>200</code> with a JSON body on success.</p>
+
+              <!-- latest -->
+              <div class="doc-ep">
+                <div class="doc-ep-head"><span class="doc-method">GET</span><span class="doc-path">/v1/latest</span></div>
+                <p class="doc-p">Returns every supported currency's rate relative to your chosen base currency.</p>
+                <div class="doc-params">
+                  <div class="dp-row"><span class="dp-name">base</span><span class="dp-type">string</span><span class="dp-desc">Base currency (ISO 4217). Optional, defaults to <code>USD</code>.</span></div>
+                </div>
+                <div class="code-tabs" data-ct>
+                  <div class="ct-head">
+                    <div class="ct-langs">
+                      <button class="active" data-lang="curl">cURL</button>
+                      <button data-lang="js">JavaScript</button>
+                      <button data-lang="py">Python</button>
+                    </div>
+                    <button class="ct-copy">Copy</button>
+                  </div>
+<pre class="ct-panel active" data-lang="curl">curl "https://api.myfx.dev/v1/latest?base=USD" \
+  -H "X-API-Key: myfx_live_xxxxxxxx"</pre>
+<pre class="ct-panel" data-lang="js">const res = await fetch("https://api.myfx.dev/v1/latest?base=USD", {
+  headers: { "X-API-Key": "myfx_live_xxxxxxxx" }
+});
+const data = await res.json();</pre>
+<pre class="ct-panel" data-lang="py">import requests
+
+res = requests.get(
+    "https://api.myfx.dev/v1/latest",
+    params={"base": "USD"},
+    headers={"X-API-Key": "myfx_live_xxxxxxxx"},
+)</pre>
+                </div>
+                <div class="doc-resp-label">Response</div>
+                <div class="code-block">
+<pre>{
+  "provider": "MyFX",
+  "source": "ECB + NBP",
+  "base": "USD",
+  "date": "2026-09-01",
+  "count": 149,
+  "rates": {
+    "EUR": 0.9231,
+    "GBP": 0.7845,
+    "INR": 88.42,
+    "JPY": 147.83
+    // …145 more
+  }
+}</pre>
+                </div>
+              </div>
+
+              <!-- convert -->
+              <div class="doc-ep">
+                <div class="doc-ep-head"><span class="doc-method">GET</span><span class="doc-path">/v1/convert</span></div>
+                <p class="doc-p">Converts an amount from one currency to another using the latest rate.</p>
+                <div class="doc-params">
+                  <div class="dp-row"><span class="dp-name">from</span><span class="dp-type">string</span><span class="dp-desc">Source currency. Optional, defaults to <code>USD</code>.</span></div>
+                  <div class="dp-row"><span class="dp-name">to</span><span class="dp-type">string</span><span class="dp-desc"><b>Required.</b> Target currency.</span></div>
+                  <div class="dp-row"><span class="dp-name">amount</span><span class="dp-type">number</span><span class="dp-desc">Amount to convert. Optional, defaults to <code>1</code>.</span></div>
+                </div>
+                <div class="code-tabs" data-ct>
+                  <div class="ct-head">
+                    <div class="ct-langs">
+                      <button class="active" data-lang="curl">cURL</button>
+                      <button data-lang="js">JavaScript</button>
+                      <button data-lang="py">Python</button>
+                    </div>
+                    <button class="ct-copy">Copy</button>
+                  </div>
+<pre class="ct-panel active" data-lang="curl">curl "https://api.myfx.dev/v1/convert?from=USD&amp;to=INR&amp;amount=100" \
+  -H "X-API-Key: myfx_live_xxxxxxxx"</pre>
+<pre class="ct-panel" data-lang="js">const url = "https://api.myfx.dev/v1/convert?from=USD&amp;to=INR&amp;amount=100";
+const res = await fetch(url, {
+  headers: { "X-API-Key": "myfx_live_xxxxxxxx" }
+});
+const data = await res.json();</pre>
+<pre class="ct-panel" data-lang="py">import requests
+
+res = requests.get(
+    "https://api.myfx.dev/v1/convert",
+    params={"from": "USD", "to": "INR", "amount": 100},
+    headers={"X-API-Key": "myfx_live_xxxxxxxx"},
+)</pre>
+                </div>
+                <div class="doc-resp-label">Response</div>
+                <div class="code-block">
+<pre>{
+  "provider": "MyFX",
+  "source": "ECB + NBP",
+  "from": "USD",
+  "to": "INR",
+  "amount": 100,
+  "rate": 88.42,
+  "result": 8842,
+  "date": "2026-09-01"
+}</pre>
+                </div>
+              </div>
+
+              <!-- currencies -->
+              <div class="doc-ep">
+                <div class="doc-ep-head"><span class="doc-method">GET</span><span class="doc-path">/v1/currencies</span></div>
+                <p class="doc-p">Lists every supported currency with its code and human-readable name.</p>
+                <div class="doc-params"><div class="dp-row dp-none"><span class="dp-desc">No parameters.</span></div></div>
+                <div class="code-tabs" data-ct>
+                  <div class="ct-head">
+                    <div class="ct-langs">
+                      <button class="active" data-lang="curl">cURL</button>
+                      <button data-lang="js">JavaScript</button>
+                      <button data-lang="py">Python</button>
+                    </div>
+                    <button class="ct-copy">Copy</button>
+                  </div>
+<pre class="ct-panel active" data-lang="curl">curl "https://api.myfx.dev/v1/currencies" \
+  -H "X-API-Key: myfx_live_xxxxxxxx"</pre>
+<pre class="ct-panel" data-lang="js">const res = await fetch("https://api.myfx.dev/v1/currencies", {
+  headers: { "X-API-Key": "myfx_live_xxxxxxxx" }
+});
+const data = await res.json();</pre>
+<pre class="ct-panel" data-lang="py">import requests
+
+res = requests.get(
+    "https://api.myfx.dev/v1/currencies",
+    headers={"X-API-Key": "myfx_live_xxxxxxxx"},
+)</pre>
+                </div>
+                <div class="doc-resp-label">Response</div>
+                <div class="code-block">
+<pre>{
+  "provider": "MyFX",
+  "count": 149,
+  "sources": ["ECB", "NBP"],
+  "currencies": [
+    { "code": "AED", "name": "UAE Dirham" },
+    { "code": "AFN", "name": "Afghan Afghani" }
+    // …147 more
+  ]
+}</pre>
+                </div>
+              </div>
+            </section>
+
+            <!-- Response fields -->
+            <section id="doc-fields" class="doc-section">
+              <h3>Response fields</h3>
+              <p class="doc-lead">What each field in a response means.</p>
+              <div class="doc-tablewrap">
+                <table class="doc-table">
+                  <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>provider</code></td><td>string</td><td>The API brand serving the data (<code>MyFX</code>).</td></tr>
+                    <tr><td><code>source</code> / <code>sources</code></td><td>string / array</td><td>Upstream feeds the rates were built from (ECB, NBP).</td></tr>
+                    <tr><td><code>base</code></td><td>string</td><td>Base currency the returned rates are relative to.</td></tr>
+                    <tr><td><code>date</code></td><td>string</td><td>Publication date of the rates (<code>YYYY-MM-DD</code>).</td></tr>
+                    <tr><td><code>count</code></td><td>number</td><td>Number of currencies returned.</td></tr>
+                    <tr><td><code>rates</code></td><td>object</td><td>Map of currency code to rate against <code>base</code>.</td></tr>
+                    <tr><td><code>from</code> / <code>to</code></td><td>string</td><td>Source and target currency (convert only).</td></tr>
+                    <tr><td><code>rate</code></td><td>number</td><td>Exchange rate applied, <code>to</code> per <code>from</code> (convert only).</td></tr>
+                    <tr><td><code>result</code></td><td>number</td><td>Converted amount, rounded to 2 decimals (convert only).</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Errors -->
+            <section id="doc-errors" class="doc-section">
+              <h3>Errors</h3>
+              <p class="doc-lead">Errors return the matching HTTP status and a JSON body with an <code>error</code> message.</p>
+              <div class="doc-tablewrap">
+                <table class="doc-table">
+                  <thead><tr><th>Status</th><th>Meaning</th><th>When it happens</th></tr></thead>
+                  <tbody>
+                    <tr><td><code>400</code></td><td>Bad Request</td><td>Unknown currency code, missing <code>to</code>, or a non-numeric <code>amount</code>.</td></tr>
+                    <tr><td><code>401</code></td><td>Unauthorized</td><td>Missing or invalid <code>X-API-Key</code> header.</td></tr>
+                    <tr><td><code>429</code></td><td>Too Many Requests</td><td>You've reached your plan's monthly request quota.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="doc-resp-label" style="margin-top:16px">Error shape</div>
+              <div class="code-block">
+<pre>{
+  "provider": "MyFX",
+  "error": "Unsupported currency: \"XYZ\"."
+}</pre>
+              </div>
+            </section>
+
+            <!-- Rate limits -->
+            <section id="doc-limits" class="doc-section">
+              <h3>Rate limits</h3>
+              <p class="doc-lead">Each plan includes a monthly request quota. Once reached, further requests return <code>429</code> until the next cycle.</p>
+              <div class="doc-tablewrap">
+                <table class="doc-table">
+                  <thead><tr><th>Plan</th><th>Included requests</th><th>Updates</th></tr></thead>
+                  <tbody>
+                    <tr><td>Starter</td><td>10,000 / month</td><td>Daily</td></tr>
+                    <tr><td>Pro</td><td>1,000,000 / month</td><td>Hourly</td></tr>
+                    <tr><td>Scale</td><td>10,000,000 / month</td><td>Real-time</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="doc-note">There is no overage billing. Requests are rejected at the quota rather than charged, so you never get a surprise bill.</div>
+            </section>
+
+            <!-- Data & freshness -->
+            <section id="doc-data" class="doc-section">
+              <h3>Data &amp; freshness</h3>
+              <p class="doc-lead">Where the numbers come from and how current they are.</p>
+              <ul class="doc-list">
+                <li><b>Sources:</b> European Central Bank (ECB) and the National Bank of Poland (NBP), merged into a single EUR-based reference set.</li>
+                <li><b>Coverage:</b> 149 currencies.</li>
+                <li><b>Freshness:</b> updated once daily on banking days, when the central banks publish.</li>
+                <li><b>Cross-rates:</b> any base currency is derived from the EUR reference rates.</li>
+              </ul>
+              <div class="doc-note">These are mid-market reference rates, not executable trading rates. Use them for display, analytics, and estimation, not to settle live trades.</div>
+            </section>
+          </div>
+        </div>
       </section>
 
       <!-- SETTINGS -->

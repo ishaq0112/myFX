@@ -163,8 +163,6 @@ async function enterApp() {
   $('#stVerified').innerHTML = ME.email_verified ? '<span class="badge active">✓ Verified</span>' : '<span class="badge suspended">Unverified</span>';
   $('#stProvider').textContent = ME.auth_provider || 'password';
   $('#stCreated').textContent = ME.created_at ? new Date(ME.created_at).toLocaleDateString() : '—';
-  // docs base url
-  ['#d1', '#d2', '#d3'].forEach((s) => ($(s).textContent = location.origin));
   // API keys page footer
   const fd = $('#footDate'); if (fd) fd.textContent = fmtDate(ME.created_at);
   const fa = $('#footAuth'); if (fa) fa.textContent = ME.auth_provider === 'google' ? 'Google' : 'Password';
@@ -227,6 +225,42 @@ if (billToggle) {
       }, 160);
     });
   });
+}
+
+/* ============ DOCS (code tabs + sub-nav) ============ */
+// Language tabs + copy on each code block.
+$$('[data-ct]').forEach((ct) => {
+  const langs = [...ct.querySelectorAll('.ct-langs button')];
+  const panels = [...ct.querySelectorAll('.ct-panel')];
+  const copy = ct.querySelector('.ct-copy');
+  langs.forEach((btn) => (btn.onclick = () => {
+    langs.forEach((b) => b.classList.toggle('active', b === btn));
+    panels.forEach((p) => p.classList.toggle('active', p.dataset.lang === btn.dataset.lang));
+  }));
+  if (copy) copy.onclick = async () => {
+    const active = ct.querySelector('.ct-panel.active');
+    try { await navigator.clipboard.writeText(active.textContent.trim()); } catch (e) {}
+    copy.textContent = 'Copied';
+    setTimeout(() => (copy.textContent = 'Copy'), 1400);
+  };
+});
+
+// Sub-nav: click to scroll, and scroll-spy to highlight the current section.
+const docsNavLinks = $$('#docsNav a');
+if (docsNavLinks.length) {
+  docsNavLinks.forEach((a) => (a.onclick = (e) => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+  const spy = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (en.isIntersecting) {
+        const id = '#' + en.target.id;
+        docsNavLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === id));
+      }
+    });
+  }, { rootMargin: '-8% 0px -75% 0px', threshold: 0 });
+  $$('.doc-section').forEach((s) => spy.observe(s));
 }
 
 /* ============ OVERVIEW (hero) ============ */
