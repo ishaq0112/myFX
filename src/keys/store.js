@@ -84,12 +84,13 @@ export async function listKeys(userId) {
  *  (active and not past its expiry). Returns { id, userId } or null. */
 export async function findUsableKey(keyHash) {
   const rows = await sql`
-    SELECT id, user_id FROM api_keys
-    WHERE key_hash = ${keyHash}
-      AND status = 'active'
-      AND (expires_at IS NULL OR expires_at > now())`;
+    SELECT k.id, k.user_id, u.plan
+    FROM api_keys k JOIN users u ON u.id = k.user_id
+    WHERE k.key_hash = ${keyHash}
+      AND k.status = 'active'
+      AND (k.expires_at IS NULL OR k.expires_at > now())`;
   const row = rows[0];
-  return row ? { id: row.id, userId: row.user_id } : null;
+  return row ? { id: row.id, userId: row.user_id, plan: row.plan } : null;
 }
 
 export async function touchLastUsed(id) {

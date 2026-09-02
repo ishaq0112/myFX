@@ -26,6 +26,7 @@ export async function requireApiKey(req, res, next) {
 
     req.apiKeyId = found.id;
     req.apiUserId = found.userId;
+    req.apiPlan = found.plan || 'free';
     touchLastUsed(found.id).catch(() => {}); // best-effort; don't block or fail
     next();
   } catch (err) {

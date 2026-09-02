@@ -38,6 +38,8 @@ export function initAuth() {
     await sql`CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub_key ON users (google_sub) WHERE google_sub IS NOT NULL`;
     // Migration: add the display name for tables created before it existed.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT`;
+    // Migration: billing plan (drives usage quotas/rate limits). Default Free.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS sessions (
@@ -85,7 +87,7 @@ export async function findUserByEmail(email) {
 
 export async function findUserById(id) {
   const rows = await sql`
-    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, created_at
+    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, created_at
     FROM users WHERE id = ${id}`;
   return rows[0] || null;
 }

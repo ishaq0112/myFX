@@ -75,6 +75,7 @@ function publicUser(u) {
     name: u.name ?? null,
     email_verified: u.email_verified ?? false,
     auth_provider: u.auth_provider ?? 'password',
+    plan: u.plan ?? 'free',
     created_at: u.created_at,
   };
 }

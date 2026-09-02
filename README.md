@@ -179,6 +179,7 @@ That's it — coverage widens with zero changes anywhere else.
 
 ## Roadmap (next stages)
 1. ✅ **Stage 1:** Working public API + daily scrape persisted to Neon.
-2. 🔨 **Stage 2:** User accounts & auth ✅ → **API keys + usage metering & rate
-   limits (next)**.
-3. ⏭ **Stage 3:** Sign-up dashboard + Stripe billing (a sellable product).
+2. ✅ **Stage 2:** User accounts & auth → API keys → **usage metering & per-plan
+   rate limits/quotas (enforced with 429; see `src/usage/`, `src/plans.js`)**.
+3. 🔨 **Stage 3:** Sign-up dashboard ✅ → **Stripe billing (next — the plans and
+   quotas are live; wiring real payment is what's left)**.

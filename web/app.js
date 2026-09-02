@@ -210,6 +210,9 @@ async function enterApp() {
   $('#stProvider').textContent = ME.auth_provider === 'google' ? 'Google' : 'Email & password';
   $('#setJoined').textContent = 'Member since ' + (ME.created_at ? new Date(ME.created_at).toLocaleDateString() : '—');
   $('#delEmail').textContent = ME.email;
+  // plan labels (sidebar + settings) from the real plan
+  const planLabel = ({ free: 'Free', pro: 'Pro', business: 'Business', enterprise: 'Enterprise' }[ME.plan] || 'Free') + ' plan';
+  ['#sidePlanName', '#sidePlanSmall', '#setPlanChip'].forEach((s) => { const el = $(s); if (el) el.textContent = planLabel; });
   // API keys page footer
   const fd = $('#footDate'); if (fd) fd.textContent = fmtDate(ME.created_at);
   const fa = $('#footAuth'); if (fa) fa.textContent = ME.auth_provider === 'google' ? 'Google' : 'Password';
@@ -394,17 +397,32 @@ if (docsNavLinks.length) {
 }
 
 /* ============ OVERVIEW (hero) ============ */
-// Sample usage series (no usage metering in this build). Account panel below is real.
-const OVDATA = {
-  month: [42, 50, 46, 58, 63, 55, 60, 72, 68, 61, 65, 75, 82, 74, 68, 78, 84, 80, 76, 88, 92, 86, 80, 90, 95, 88, 84, 93, 97, 90],
-  '30d': [55, 60, 52, 64, 70, 66, 72, 80, 76, 70, 74, 68, 72, 84, 90, 82, 78, 86, 94, 88, 82, 90, 96, 89, 84, 92, 99, 94, 88, 95],
-};
+// The chart plots REAL daily usage (GET /usage/daily). It's sparse until the API
+// gets called day-to-day, and fills in on its own as usage accrues.
 let ovRange = 'month';
+let OV_SERIES = []; // [{ day:'YYYY-MM-DD', count }]
+
+const dayLabel = (s) => {
+  if (!s) return '';
+  const d = new Date(s + 'T00:00:00Z');
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+};
+
+async function loadDaily() {
+  const days = ovRange === '30d' ? 30 : Math.max(7, new Date().getUTCDate()); // 'month' = this month so far
+  const r = await api('/usage/daily?days=' + days, { auth: true });
+  OV_SERIES = r.ok && Array.isArray(r.data.days) ? r.data.days : [];
+  renderOvChart();
+}
+
 function renderOvChart() {
-  const data = OVDATA[ovRange], svg = $('#ovChart'), W = 1000, H = 240, pad = 8;
-  const n = data.length, max = Math.max(...data) * 1.15;
+  const svg = $('#ovChart'); if (!svg) return;
+  const series = OV_SERIES.length >= 2 ? OV_SERIES : [{ day: '', count: 0 }, { day: '', count: 0 }];
+  const counts = series.map((s) => s.count);
+  const W = 1000, H = 240, pad = 8;
+  const n = counts.length, max = Math.max(1, Math.max(...counts) * 1.15);
   const dx = W / (n - 1), X = (i) => i * dx, Y = (v) => H - pad - (v / max) * (H - pad * 2);
-  let line = ''; data.forEach((v, i) => (line += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '));
+  let line = ''; counts.forEach((v, i) => (line += (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1) + ' '));
   const area = line + `L${W} ${H} L0 ${H} Z`;
   const c = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
   svg.innerHTML = `<defs><linearGradient id="og" x1="0" x2="0" y1="0" y2="1">
@@ -413,7 +431,13 @@ function renderOvChart() {
     <line id="ovGuide" x1="0" y1="4" x2="0" y2="236" stroke="${c}" stroke-opacity="0.28" stroke-width="1.5" style="opacity:0"/>
     <path d="${line}" fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     <circle id="ovDot" r="4.5" fill="${c}" stroke="#fff" stroke-width="2" style="opacity:0"/>`;
-  svg._meta = { data, n, X, Y };
+  svg._meta = { series, counts, n, X, Y };
+  // x-axis: 5 evenly-spaced real dates
+  const xEl = $('#ovX');
+  if (xEl) {
+    const idxs = [0, Math.floor((n - 1) * 0.25), Math.floor((n - 1) * 0.5), Math.floor((n - 1) * 0.75), n - 1];
+    xEl.innerHTML = idxs.map((i) => `<span>${dayLabel(series[i] && series[i].day)}</span>`).join('');
+  }
 }
 
 // Hover tooltip: show the day + that day's requests, and move the dot.
@@ -425,14 +449,15 @@ function renderOvChart() {
     const r = svg.getBoundingClientRect();
     let i = Math.round(((e.clientX - r.left) / r.width) * (m.n - 1));
     i = Math.max(0, Math.min(m.n - 1, i));
-    const val = m.data[i];
+    const val = m.counts[i];
     const dot = document.getElementById('ovDot');
     if (dot) { dot.setAttribute('cx', m.X(i)); dot.setAttribute('cy', m.Y(val)); dot.style.opacity = 1; }
     const g = document.getElementById('ovGuide');
     if (g) { g.setAttribute('x1', m.X(i)); g.setAttribute('x2', m.X(i)); g.style.opacity = 1; }
     // Set content first so offsetWidth/Height are accurate, then clamp inside the plot
     // (the card clips overflow, so an un-clamped tooltip gets cut at the edges).
-    tip.innerHTML = `<b>Aug ${i + 1}</b>${Math.round(val * 24).toLocaleString()} requests`;
+    const lbl = dayLabel(m.series[i] && m.series[i].day);
+    tip.innerHTML = `<b>${lbl}</b>${val.toLocaleString()} request${val === 1 ? '' : 's'}`;
     tip.style.opacity = 1;
     const halfW = tip.offsetWidth / 2;
     const rawLeft = (m.X(i) / 1000) * r.width;
@@ -449,7 +474,28 @@ function renderOvChart() {
 async function loadOverview() {
   const k = await api('/keys', { auth: true });
   if (k.ok) { const active = (k.data.keys || []).filter((x) => x.status === 'active').length; const el = $('#stKeys'); if (el) el.textContent = active; }
-  renderOvChart();
+  const u = await api('/usage', { auth: true });
+  if (u.ok) applyUsage(u.data);
+  loadDaily();
+}
+
+// Wire the real metered usage from GET /usage into the overview + sidebar.
+function applyUsage(d) {
+  const n = (x) => Number(x || 0).toLocaleString('en-US');
+  const used = d.used || 0, today = d.today || 0, be = d.byEndpoint || {};
+  const monthly = d.limits ? d.limits.monthly : null;
+  const set = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  set('ovMonth', n(used));
+  set('ovMonthBig', n(used));
+  set('ovToday', n(today));
+  set('ovApiSub', n(used) + ' requests this month');
+  set('ovLegLatest', n(be.latest)); set('ovLegConvert', n(be.convert)); set('ovLegCurr', n(be.currencies));
+  const tot = (be.latest || 0) + (be.convert || 0) + (be.currencies || 0);
+  const w = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = (tot ? Math.round((v / tot) * 100) : 0) + '%'; };
+  w('ovSegLatest', be.latest || 0); w('ovSegConvert', be.convert || 0); w('ovSegCurr', be.currencies || 0);
+  set('sidePlanQuota', monthly != null ? n(monthly) + ' requests / month' : 'Unlimited requests');
+  const bar = document.getElementById('sideUsageBar');
+  if (bar) bar.style.width = (monthly ? Math.min(100, Math.round((used / monthly) * 100)) : 4) + '%';
 }
 const fmt = (v) => (v == null ? '—' : Number(v).toLocaleString(undefined, { maximumFractionDigits: 4 }));
 
@@ -514,7 +560,7 @@ $('#heroCreate').onclick = openCreate;
 $('#ovRange').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   $$('#ovRange button').forEach((x) => x.classList.remove('active'));
-  b.classList.add('active'); ovRange = b.dataset.r; renderOvChart();
+  b.classList.add('active'); ovRange = b.dataset.r; loadDaily();
 });
 $('#createConfirm').onclick = async function () {
   const name = $('#keyName').value.trim() || 'untitled-key';

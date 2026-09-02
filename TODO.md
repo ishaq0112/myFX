@@ -14,12 +14,9 @@ Running list of deferred work. Done items live in the code + README.
 - [ ] **Login rate-limiting** — throttle repeated failed logins (brute-force).
 - [ ] **Password reset** — "forgot password" flow (email a reset link).
 
-## Next feature (Stage 2 continued)
-- [x] **API keys** — create/list/revoke per-user keys (`/keys`), `/v1/*` gated
-      behind `X-API-Key`. Status (active/suspended/revoked) + optional expiry.
-- [ ] **Usage metering + rate limits** — count each key's calls (e.g.
-      `usage_daily` table) and enforce quotas/limits. Builds on `api_keys`.
-      (This is what turns signups into billable customers.)
+## Next feature (Stage 3)
+- [ ] **Stripe billing** — wire real payment + let a plan change move the user's
+      `plan` column. The plans, quotas, and per-plan limits are already live.
 
 ## Housekeeping
 - [ ] **Rotate the Neon password** — it was exposed in plaintext during setup.
@@ -35,3 +32,5 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Google OAuth **code** (pending credentials above to activate).
 - [x] UUID primary keys for users.
 - [x] API keys: create/list/revoke, `/v1/*` gated behind `X-API-Key`.
+- [x] Usage metering + per-plan quotas/rate limits (enforced with 429),
+      `/usage` endpoint, dashboard wired to real usage (`src/usage/`, `src/plans.js`).

@@ -24,6 +24,9 @@ import { mailerMode } from './src/auth/mailer.js';
 import keysRouter from './src/keys/routes.js';
 import { initKeys } from './src/keys/store.js';
 import { requireApiKey } from './src/keys/middleware.js';
+import usageRouter from './src/usage/routes.js';
+import { initUsage } from './src/usage/store.js';
+import { meterUsage } from './src/usage/middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,9 +38,11 @@ app.use(express.json()); // parse JSON request bodies (for /auth/*)
 app.use('/app', express.static('web')); // dashboard SPA, served same-origin
 app.use(authRouter); // /auth/signup, /auth/login, /auth/logout, /auth/me
 app.use(keysRouter); // /keys (create/list/revoke) — session-protected
+app.use(usageRouter); // /usage — session-protected (this month's metered usage)
 
-// Everything under /v1/* now requires a valid API key (X-API-Key header).
-app.use('/v1', requireApiKey);
+// Everything under /v1/* requires a valid API key (X-API-Key header), then is
+// metered: per-minute rate limit + monthly quota (429 when exceeded).
+app.use('/v1', requireApiKey, meterUsage);
 
 // GET /v1/latest?base=USD  -> every currency relative to `base`
 app.get('/v1/latest', async (req, res) => {
@@ -121,10 +126,12 @@ app.listen(PORT, async () => {
     if (authAvailable()) {
       await initAuth();
       await initKeys();
+      await initUsage();
       console.log('Auth: ready (email/password + verification)');
       console.log(`  Google sign-in: ${googleConfigured() ? 'enabled' : 'not configured (set GOOGLE_CLIENT_ID/SECRET)'}`);
       console.log(`  Email delivery: ${mailerMode() === 'resend' ? 'Resend' : 'dev console (links logged here)'}`);
       console.log('  API keys: ready (/keys) — /v1/* now requires X-API-Key');
+      console.log('  Usage metering: on — per-plan quota + rate limit enforced (/usage)');
     } else {
       console.log('Auth: disabled (set DATABASE_URL to enable accounts)');
     }

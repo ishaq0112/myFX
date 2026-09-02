@@ -73,9 +73,9 @@
     </nav>
     <div class="side-spacer"></div>
     <div class="side-usage">
-      <b>Pro plan</b>
-      <div class="su-sub">100,000 requests / month</div>
-      <div class="su-bar"><i style="width:47%"></i></div>
+      <b id="sidePlanName">Pro plan</b>
+      <div class="su-sub" id="sidePlanQuota">100,000 requests / month</div>
+      <div class="su-bar"><i id="sideUsageBar" style="width:47%"></i></div>
     </div>
     <div class="promo">
       <b>Upgrade to Business</b>
@@ -84,7 +84,7 @@
     </div>
     <div class="side-acct">
       <div class="avatar" id="sideAvatar">?</div>
-      <div class="who"><b id="sideEmail">—</b><small>Pro plan</small></div>
+      <div class="who"><b id="sideEmail">—</b><small id="sidePlanSmall">Pro plan</small></div>
     </div>
   </aside>
   <div class="nav-scrim" id="navScrim"></div>
@@ -105,8 +105,8 @@
           <!-- ROW 1: stat cards + quick actions -->
           <div class="drow-top">
             <div class="mini-stats">
-              <div class="mini"><div class="mtop"><span class="mi t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><div class="k">Requests this month</div></div><div class="v">47,318</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="k">Requests today</div></div><div class="v">1,842</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><div class="k">Requests this month</div></div><div class="v" id="ovMonth">47,318</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="k">Requests today</div></div><div class="v" id="ovToday">1,842</div></div>
               <div class="mini"><div class="mtop"><span class="mi t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5 5 0 1 1-7.07 7.07 5 5 0 0 1 7.07-7.07zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span><div class="k">Active keys</div></div><div class="v" id="stKeys">—</div></div>
               <div class="mini"><div class="mtop"><span class="mi t4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="k">Error rate</div></div><div class="v">0.31%</div></div>
             </div>
@@ -122,7 +122,7 @@
           <!-- ROW 2: full-width graph -->
           <div class="card chartcard chartcard-full">
             <div class="cc-head">
-              <div><div class="eyebrow">Requests this month</div><div class="cc-num">47,318 <span class="cc-delta">↑ 23.4%</span></div></div>
+              <div><div class="eyebrow">Requests this month</div><div class="cc-num"><span id="ovMonthBig">47,318</span> <span class="cc-delta">↑ 23.4%</span></div></div>
               <div class="range" id="ovRange"><button class="active" data-r="month">Month</button><button data-r="30d">30 days</button></div>
             </div>
             <div class="cc-plot">
@@ -144,9 +144,9 @@
             </div>
 
             <div class="card card-pad">
-              <div class="ov-head"><div><h3>API Overview</h3><div class="sub">47,318 requests this month</div></div><div class="ov-delta">23%↑</div></div>
-              <div class="seg"><i style="width:65%;background:var(--accent)"></i><i style="width:26%;background:#1c1917"></i><i style="width:9%;background:#f6b27a"></i></div>
-              <div class="seg-legend"><span><i class="sw" style="background:var(--accent)"></i>latest <b>30,914</b></span><span><i class="sw" style="background:#1c1917"></i>convert <b>12,466</b></span><span><i class="sw" style="background:#f6b27a"></i>currencies <b>3,938</b></span></div>
+              <div class="ov-head"><div><h3>API Overview</h3><div class="sub" id="ovApiSub">47,318 requests this month</div></div><div class="ov-delta">23%↑</div></div>
+              <div class="seg"><i id="ovSegLatest" style="width:65%;background:var(--accent)"></i><i id="ovSegConvert" style="width:26%;background:#1c1917"></i><i id="ovSegCurr" style="width:9%;background:#f6b27a"></i></div>
+              <div class="seg-legend"><span><i class="sw" style="background:var(--accent)"></i>latest <b id="ovLegLatest">30,914</b></span><span><i class="sw" style="background:#1c1917"></i>convert <b id="ovLegConvert">12,466</b></span><span><i class="sw" style="background:#f6b27a"></i>currencies <b id="ovLegCurr">3,938</b></span></div>
             </div>
           </div>
         </div>
@@ -613,7 +613,7 @@ res = requests.get(
             <div class="set-profile">
               <div class="set-avatar" id="setAvatar">?</div>
               <div class="set-profile-meta">
-                <div class="set-name-line"><b id="setDisplayName">—</b> <span class="plan-chip" data-goto="billing">Pro plan</span></div>
+                <div class="set-name-line"><b id="setDisplayName">—</b> <span class="plan-chip" data-goto="billing" id="setPlanChip">Pro plan</span></div>
                 <div class="set-sub" id="setJoined">Member since —</div>
               </div>
             </div>
