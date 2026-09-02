@@ -216,6 +216,12 @@ async function enterApp() {
   // prefill rates key
   $('#ratesKey').value = sessionStorage.getItem(APIKEY_KEY) || '';
 
+  // Restore the saved sidebar-collapsed state (desktop only) before showing the
+  // app, so it appears already collapsed rather than animating shut.
+  try {
+    if (localStorage.getItem(NAV_COLLAPSED_KEY) === '1' && !isMobileNav()) $('#app').classList.add('collapsed');
+  } catch (e) {}
+
   $('#auth').classList.add('hidden');
   $('#app').classList.remove('hidden');
   go('overview');
@@ -231,13 +237,26 @@ function go(screen) {
   if (screen === 'overview') loadOverview();
   if (screen === 'keys') loadKeys();
   if (screen === 'rates') { ensureCurrencies(); updateKeyStatus(); }
-  if (screen === 'billing') moveBillInd(true);
+  if (screen === 'billing') { moveBillInd(true); initBilling(); }
 }
 function updateKeyStatus() { const d = document.getElementById('rkDot'); if (d) d.classList.toggle('on', !!sessionStorage.getItem(APIKEY_KEY)); }
 $('#nav').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) go(b.dataset.screen); });
 $$('[data-goto]').forEach((el) => (el.onclick = () => go(el.dataset.goto)));
 $$('[data-toast]').forEach((el) => (el.onclick = () => toast(el.dataset.toast)));
-$('#hb').onclick = () => $('#app').classList.toggle('open');
+// Sidebar toggle: on mobile (≤820px) it slides the drawer in/out; on desktop it
+// collapses/expands the sidebar and remembers the choice.
+const NAV_COLLAPSED_KEY = 'myfx_nav_collapsed';
+const isMobileNav = () => window.matchMedia('(max-width: 820px)').matches;
+$('#hb').onclick = () => {
+  if (isMobileNav()) {
+    $('#app').classList.toggle('open');
+  } else {
+    const collapsed = $('#app').classList.toggle('collapsed');
+    try { localStorage.setItem(NAV_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) {}
+  }
+};
+// Tap the backdrop to close the mobile drawer.
+$('#navScrim').onclick = () => $('#app').classList.remove('open');
 
 /* ============ BILLING (plan cycle toggle) ============ */
 const billToggle = $('#billToggle');
@@ -252,25 +271,89 @@ function moveBillInd(instant) {
   billInd.style.left = active.offsetLeft + 'px';
   if (instant) { void billInd.offsetWidth; billInd.style.transition = ''; }
 }
+// --- Localized pricing ---
+// Prices are defined in USD (data-m / data-y). We detect the visitor's currency
+// from their locale, let them override it, and convert using our OWN live rates
+// (via the stored API key) — falling back to a small static table if unavailable.
+const BILL_LOCALE = navigator.language || 'en-US';
+const REGION_CURRENCY = {
+  US:'USD', GB:'GBP', IN:'INR', JP:'JPY', AU:'AUD', CA:'CAD', CH:'CHF', CN:'CNY',
+  AE:'AED', SG:'SGD', BR:'BRL', ZA:'ZAR', MX:'MXN', NZ:'NZD',
+  DE:'EUR', FR:'EUR', IT:'EUR', ES:'EUR', NL:'EUR', IE:'EUR', PT:'EUR', AT:'EUR', BE:'EUR', FI:'EUR', GR:'EUR',
+};
+const BILL_CURRENCIES = ['USD','EUR','GBP','INR','JPY','AUD','CAD','CHF','CNY','AED','SGD','BRL','ZAR','MXN','NZD'];
+const STATIC_RATES = { USD:1, EUR:0.92, GBP:0.79, INR:83.3, JPY:150, AUD:1.52, CAD:1.36, CHF:0.88, CNY:7.2, AED:3.67, SGD:1.34, BRL:5.4, ZAR:18.5, MXN:18.7, NZD:1.66 };
+let PRICE_RATES = { ...STATIC_RATES };
+let billCycle = 'monthly';
+let billCurrency = 'USD';
+let billingReady = false;
+
+function detectCurrency() {
+  try { const rgn = new Intl.Locale(BILL_LOCALE).maximize().region; return REGION_CURRENCY[rgn] || 'USD'; }
+  catch (e) { return 'USD'; }
+}
+// Base prices are defined in INR (data-m / data-y). Convert to the chosen currency
+// via the USD-anchored rate table: inr -> USD -> target.
+function fmtPrice(inr) {
+  const inrRate = PRICE_RATES['INR'] || 83.3;
+  const val = Math.round(inr * ((PRICE_RATES[billCurrency] || 1) / inrRate));
+  try { return new Intl.NumberFormat(BILL_LOCALE, { style: 'currency', currency: billCurrency, maximumFractionDigits: 0 }).format(val); }
+  catch (e) { return '₹' + val; }
+}
+function renderBillPrices(animate) {
+  const yearly = billCycle === 'yearly';
+  $$('.planc-price .amt').forEach((a) => {
+    const annual = +a.dataset.y;
+    const monthly = +a.dataset.m;
+    // Yearly shows the effective per-month price (annual / 12) so it reads cheaper,
+    // with the true annual total spelled out in the note below.
+    const shown = yearly ? Math.round(annual / 12) : monthly;
+    const txt = fmtPrice(shown);
+    const per = a.closest('.planc-price').querySelector('.per');
+    const billed = a.closest('.planc').querySelector('.planc-billed');
+    const free = monthly === 0;
+    const apply = () => {
+      a.textContent = txt;
+      if (per) per.textContent = '/ month';
+      if (billed) billed.textContent = yearly && !free ? fmtPrice(annual) + ' billed yearly' : ' ';
+    };
+    if (animate) {
+      a.classList.add('swapping'); if (billed) billed.classList.add('swapping');
+      setTimeout(() => { apply(); a.classList.remove('swapping'); if (billed) billed.classList.remove('swapping'); }, 160);
+    } else { apply(); }
+  });
+}
+async function loadPriceRates() {
+  const key = sessionStorage.getItem(APIKEY_KEY);
+  if (key) {
+    try {
+      const r = await fetch('/v1/latest?base=USD', { headers: { 'X-API-Key': key } });
+      if (r.ok) { const d = await r.json(); if (d && d.rates) { PRICE_RATES = { USD: 1, ...d.rates }; return; } }
+    } catch (e) { /* fall back below */ }
+  }
+  PRICE_RATES = { ...STATIC_RATES };
+}
+async function initBilling() {
+  if (billingReady) return; billingReady = true;
+  billCurrency = 'INR'; // default display currency (was locale-detected via detectCurrency)
+  const sel = $('#curSelect');
+  if (sel) {
+    const list = BILL_CURRENCIES.includes(billCurrency) ? BILL_CURRENCIES : [billCurrency, ...BILL_CURRENCIES];
+    sel.innerHTML = list.map((c) => `<option value="${c}">${c}</option>`).join('');
+    sel.value = billCurrency;
+    sel.onchange = () => { billCurrency = sel.value; renderBillPrices(true); };
+  }
+  await loadPriceRates();
+  renderBillPrices(false);
+}
+
 if (billToggle) {
   billToggle.addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
-    const yearly = b.dataset.cycle === 'yearly';
+    billCycle = b.dataset.cycle;
     $$('#billToggle button').forEach((x) => x.classList.toggle('active', x === b));
     moveBillInd();
-    // Fade/slide the price out, swap the value while hidden, then ease it back in.
-    $$('.planc-price .amt').forEach((a) => {
-      const billed = a.closest('.planc').querySelector('.planc-billed');
-      const free = a.dataset.m === '$0';
-      a.classList.add('swapping');
-      if (billed) billed.classList.add('swapping');
-      setTimeout(() => {
-        a.textContent = yearly ? a.dataset.y : a.dataset.m;
-        if (billed) billed.textContent = yearly && !free ? 'billed annually' : ' ';
-        a.classList.remove('swapping');
-        if (billed) billed.classList.remove('swapping');
-      }, 160);
-    });
+    renderBillPrices(true);
   });
 }
 

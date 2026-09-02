@@ -73,24 +73,25 @@
     </nav>
     <div class="side-spacer"></div>
     <div class="side-usage">
-      <b>Free plan</b>
+      <b>Pro plan</b>
       <div class="su-sub">100,000 requests / month</div>
       <div class="su-bar"><i style="width:47%"></i></div>
     </div>
     <div class="promo">
-      <b>Upgrade to Pro</b>
-      <p>1M requests/mo · hourly updates · priority support.</p>
+      <b>Upgrade to Business</b>
+      <p>500,000 requests/mo · real-time updates · priority support.</p>
       <button class="promo-btn" data-goto="billing">See plans →</button>
     </div>
     <div class="side-acct">
       <div class="avatar" id="sideAvatar">?</div>
-      <div class="who"><b id="sideEmail">—</b><small>Free plan</small></div>
+      <div class="who"><b id="sideEmail">—</b><small>Pro plan</small></div>
     </div>
   </aside>
+  <div class="nav-scrim" id="navScrim"></div>
 
   <div class="main">
     <header class="topbar">
-      <button class="hb" id="hb">☰</button>
+      <button class="hb" id="hb" aria-label="Toggle sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
       <h1 id="pageTitle">Overview</h1>
       <div class="sp"></div>
       <button class="btn btn-outline btn-sm" id="logoutBtn">Log out</button>
@@ -229,7 +230,9 @@
 
       <!-- BILLING -->
       <section id="billing" class="screen hidden">
-        <div class="page-head"><div><h2>Plans &amp; Pricing</h2><p>Simple, transparent pricing. Scale as you grow, cancel anytime.</p></div></div>
+        <div class="page-head"><div><h2>Plans &amp; Pricing</h2><p>Simple, transparent pricing. Scale as you grow, cancel anytime.</p></div>
+          <div class="cur-picker"><span>Prices in</span><select id="curSelect" aria-label="Display currency"></select></div>
+        </div>
 
         <div class="bill-toggle"><div class="bt-seg" id="billToggle">
           <span class="bt-ind" aria-hidden="true"></span>
@@ -240,16 +243,16 @@
         <div class="plans">
           <!-- Free -->
           <div class="planc">
-            <div class="planc-top"><div class="planc-name">Free</div><span class="planc-badge">Current</span></div>
-            <div class="planc-price"><span class="amt" data-m="$0" data-y="$0">$0</span><span class="per">/ month</span></div>
+            <div class="planc-top"><div class="planc-name">Free</div></div>
+            <div class="planc-price"><span class="amt" data-m="0" data-y="0">₹0</span><span class="per">/ month</span></div>
             <p class="planc-billed">&nbsp;</p>
             <p class="planc-desc">For side projects and trying out the API.</p>
-            <button class="btn btn-outline planc-cta" disabled>Current plan</button>
+            <button class="btn btn-outline planc-cta" data-toast="You're on Pro — downgrades aren't wired in this demo yet.">Downgrade to Free</button>
             <ul class="planc-feats">
-              <li>100,000 requests / month</li>
+              <li>2,500 requests / month</li>
+              <li>5 requests / min</li>
               <li>All 149 currencies</li>
               <li>Daily rate updates</li>
-              <li>Latest &amp; convert endpoints</li>
               <li>Community support</li>
             </ul>
           </div>
@@ -257,36 +260,46 @@
           <!-- Pro (featured) -->
           <div class="planc feat">
             <div class="planc-ribbon">★ Most popular</div>
-            <div class="planc-top"><div class="planc-name">Pro</div><span class="planc-badge">Save 20%</span></div>
-            <div class="planc-price"><span class="amt" data-m="$49" data-y="$39">$49</span><span class="per">/ month</span></div>
+            <div class="planc-top"><div class="planc-name">Pro</div><span class="planc-badge">Current</span></div>
+            <div class="planc-price"><span class="amt" data-m="799" data-y="7990">₹799</span><span class="per">/ month</span></div>
             <p class="planc-billed">&nbsp;</p>
             <p class="planc-desc">Everything you need to scale with confidence: more headroom, fresher rates, and support that has your back.</p>
-            <button class="btn btn-primary planc-cta" data-toast="Checkout isn't connected in this demo yet.">Upgrade to Pro</button>
+            <button class="btn btn-primary planc-cta" disabled>Current plan</button>
             <ul class="planc-feats">
               <li class="feat-lead">Everything in Free, plus:</li>
-              <li>1,000,000 requests / month (10× more)</li>
-              <li>Fresh rates, updated every hour</li>
+              <li>100,000 requests / month</li>
+              <li>120 requests / min</li>
+              <li>Hourly rate updates</li>
               <li>Historical rates endpoint</li>
-              <li>Priority email support</li>
-              <li>99.9% uptime SLA</li>
+              <li>Email support</li>
             </ul>
           </div>
 
-          <!-- Scale -->
+          <!-- Business -->
           <div class="planc">
-            <div class="planc-top"><div class="planc-name">Scale</div><span class="planc-badge">Save 25%</span></div>
-            <div class="planc-price"><span class="amt" data-m="$199" data-y="$149">$199</span><span class="per">/ month</span></div>
+            <div class="planc-top"><div class="planc-name">Business</div><span class="planc-badge">Save 17%</span></div>
+            <div class="planc-price"><span class="amt" data-m="1999" data-y="19990">₹1,999</span><span class="per">/ month</span></div>
             <p class="planc-billed">&nbsp;</p>
-            <p class="planc-desc">For high-volume platforms that need real-time data and support.</p>
-            <button class="btn btn-outline planc-cta" data-toast="Checkout isn't connected in this demo yet.">Choose Scale</button>
+            <p class="planc-desc">For high-volume platforms that need real-time data and priority support.</p>
+            <button class="btn btn-outline planc-cta" data-toast="Checkout isn't connected in this demo yet.">Choose Business</button>
             <ul class="planc-feats">
-              <li>10,000,000 requests / month</li>
+              <li class="feat-lead">Everything in Pro, plus:</li>
+              <li>500,000 requests / month</li>
+              <li>400 requests / min</li>
               <li>Real-time rate updates</li>
-              <li>Custom base currencies</li>
               <li>Priority support</li>
-              <li>Dedicated SLA &amp; onboarding</li>
+              <li>99.9% uptime SLA</li>
             </ul>
           </div>
+        </div>
+
+        <!-- Enterprise: contact us -->
+        <div class="ent-band">
+          <div class="ent-info">
+            <div class="ent-name">Enterprise</div>
+            <p>Need more than Business? Get custom volume (1M+ requests / month), custom rate limits, a dedicated SLA, and priority onboarding.</p>
+          </div>
+          <a class="btn btn-primary ent-cta" href="mailto:sales@myfx.dev?subject=Enterprise%20plan%20enquiry">Contact us</a>
         </div>
 
         <div class="bill-lower">
@@ -296,16 +309,16 @@
               <div class="pay-info"><span class="pay-brand">Visa</span> <span class="pay-dots">•••• 4242</span> <span class="pay-exp">exp 04/29</span></div>
               <button class="btn btn-outline btn-sm" data-toast="Payment updates aren't wired in this demo.">Update</button>
             </div>
-            <p class="pay-note">No overage billing on Free. Requests are rejected at the quota instead.</p>
+            <p class="pay-note">No overage billing. Requests are rejected at the quota instead, so you never get a surprise bill.</p>
           </div>
 
           <div class="card inv-card">
             <div class="bl-label inv-head">Invoices</div>
             <div class="inv-list">
-              <div class="inv-row"><span class="inv-date">Aug 1, 2026</span><span class="inv-id">in_4Kp29QdX</span><span class="inv-amt">$0.00</span><span class="inv-st">paid</span></div>
-              <div class="inv-row"><span class="inv-date">Jul 1, 2026</span><span class="inv-id">in_9Vb01LmR</span><span class="inv-amt">$49.00</span><span class="inv-st">paid</span></div>
-              <div class="inv-row"><span class="inv-date">Jun 1, 2026</span><span class="inv-id">in_2Tz84HcW</span><span class="inv-amt">$49.00</span><span class="inv-st refunded">refunded</span></div>
-              <div class="inv-row"><span class="inv-date">May 1, 2026</span><span class="inv-id">in_7Nq55BfE</span><span class="inv-amt">$49.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Aug 1, 2026</span><span class="inv-id">in_4Kp29QdX</span><span class="inv-amt">₹799.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jul 1, 2026</span><span class="inv-id">in_9Vb01LmR</span><span class="inv-amt">₹799.00</span><span class="inv-st">paid</span></div>
+              <div class="inv-row"><span class="inv-date">Jun 1, 2026</span><span class="inv-id">in_2Tz84HcW</span><span class="inv-amt">₹799.00</span><span class="inv-st refunded">refunded</span></div>
+              <div class="inv-row"><span class="inv-date">May 1, 2026</span><span class="inv-id">in_7Nq55BfE</span><span class="inv-amt">₹799.00</span><span class="inv-st">paid</span></div>
             </div>
           </div>
         </div>
@@ -561,11 +574,12 @@ res = requests.get(
               <p class="doc-lead">Each plan includes a monthly request quota. Once reached, further requests return <code>429</code> until the next cycle.</p>
               <div class="doc-tablewrap">
                 <table class="doc-table">
-                  <thead><tr><th>Plan</th><th>Included requests</th><th>Updates</th></tr></thead>
+                  <thead><tr><th>Plan</th><th>Included requests</th><th>Rate limit</th><th>Updates</th></tr></thead>
                   <tbody>
-                    <tr><td>Free</td><td>100,000 / month</td><td>Daily</td></tr>
-                    <tr><td>Pro</td><td>1,000,000 / month</td><td>Hourly</td></tr>
-                    <tr><td>Scale</td><td>10,000,000 / month</td><td>Real-time</td></tr>
+                    <tr><td>Free</td><td>2,500 / month</td><td>5 req / min</td><td>Daily</td></tr>
+                    <tr><td>Pro</td><td>100,000 / month</td><td>120 req / min</td><td>Hourly</td></tr>
+                    <tr><td>Business</td><td>500,000 / month</td><td>400 req / min</td><td>Real-time</td></tr>
+                    <tr><td>Enterprise</td><td>1M+ / month</td><td>Custom</td><td>Real-time</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -599,7 +613,7 @@ res = requests.get(
             <div class="set-profile">
               <div class="set-avatar" id="setAvatar">?</div>
               <div class="set-profile-meta">
-                <div class="set-name-line"><b id="setDisplayName">—</b> <span class="plan-chip" data-goto="billing">Free plan</span></div>
+                <div class="set-name-line"><b id="setDisplayName">—</b> <span class="plan-chip" data-goto="billing">Pro plan</span></div>
                 <div class="set-sub" id="setJoined">Member since —</div>
               </div>
             </div>
