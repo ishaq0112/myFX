@@ -11,7 +11,6 @@ Running list of deferred work. Done items live in the code + README.
 - [ ] **Real email delivery** — currently dev-console mode (verification links
       are logged / returned as `dev_verify_url`). Set `RESEND_API_KEY` +
       `MAIL_FROM` in `.env` to send real emails.
-- [ ] **Login rate-limiting** — throttle repeated failed logins (brute-force).
 - [ ] **Password reset** — "forgot password" flow (email a reset link).
 
 ## Next feature (Stage 3)
@@ -32,5 +31,6 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Google OAuth **code** (pending credentials above to activate).
 - [x] UUID primary keys for users.
 - [x] API keys: create/list/revoke, `/v1/*` gated behind `X-API-Key`.
+- [x] Login rate-limiting — brute-force throttle by email + IP (`src/auth/loginLimiter.js`).
 - [x] Usage metering + per-plan quotas/rate limits (enforced with 429),
       `/usage` endpoint, dashboard wired to real usage (`src/usage/`, `src/plans.js`).

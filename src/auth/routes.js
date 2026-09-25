@@ -13,7 +13,7 @@
 // before they can log in; Google accounts are verified by Google.
 //
 // NOTE: passwords travel in the request body — serve over HTTPS in production.
-// Login rate-limiting and password reset are still deferred.
+// Login has brute-force throttling (see loginLimiter.js); password reset is still deferred.
 
 import express from 'express';
 import { hashPassword, verifyPassword } from './passwords.js';
@@ -40,6 +40,7 @@ import {
   createSession,
   deleteSession,
 } from './store.js';
+import { loginBlockedFor, recordLoginFailure, recordLoginSuccess } from './loginLimiter.js';
 
 const router = express.Router();
 
@@ -173,11 +174,23 @@ router.post('/auth/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Email and password are required.' });
     }
 
+    // Throttle brute-force: block after too many recent failures (by email + IP).
+    const limitKeys = [`email:${email}`, `ip:${req.ip}`];
+    const wait = loginBlockedFor(limitKeys);
+    if (wait) {
+      res.set('Retry-After', String(wait));
+      return res.status(429).json({
+        error: `Too many failed attempts. Try again in ${Math.ceil(wait / 60)} minute(s).`,
+      });
+    }
+
     const user = await findUserByEmail(email);
     const ok = user && user.password_hash && (await verifyPassword(password, user.password_hash));
     if (!ok) {
+      recordLoginFailure(limitKeys);
       return res.status(401).json({ error: 'Invalid email or password.' });
     }
+    recordLoginSuccess(limitKeys); // correct password -> reset the counters
     if (!user.email_verified) {
       return res.status(403).json({
         error: 'Email not verified. Check your inbox or use /auth/resend-verification.',

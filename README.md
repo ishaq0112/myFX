@@ -158,7 +158,7 @@ Statuses: `active` (works) · `suspended` (temporarily off, reversible) ·
 
 > **Notes:** passwords travel in the request body — serve over **HTTPS** in
 > production. Email delivery uses Resend when `RESEND_API_KEY` is set, otherwise
-> dev-console mode. Still deferred: login rate-limiting and password reset. The
+> dev-console mode. Login has brute-force throttling; password reset is still deferred. The
 > `/v1/*` rate endpoints remain open — gating them behind per-user **API keys**
 > is the next step.
 
