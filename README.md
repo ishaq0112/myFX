@@ -137,7 +137,9 @@ Setup: create an OAuth client in Google Cloud Console and set `GOOGLE_CLIENT_ID`
 
 ### Session routes
 **`GET /auth/me`** *(Bearer)* — current account. **`POST /auth/logout`**
-*(Bearer)* — revokes the token.
+*(Bearer)* — revokes the token. **`DELETE /auth/me`** *(Bearer)* — permanently
+deletes the account; child rows (sessions, API keys, usage, tokens) are removed
+by `ON DELETE CASCADE`.
 
 ## API keys
 

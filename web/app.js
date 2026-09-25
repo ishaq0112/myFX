@@ -238,9 +238,17 @@ $('#deleteAcctBtn').onclick = () => { $('#delConfirmInput').value = ''; $('#dele
 $('#delConfirmInput').oninput = (e) => {
   $('#deleteConfirm').disabled = !ME || e.target.value.trim().toLowerCase() !== (ME.email || '').toLowerCase();
 };
-$('#deleteConfirm').onclick = () => {
+$('#deleteConfirm').onclick = async () => {
+  const btn = $('#deleteConfirm');
+  btn.disabled = true;
+  const { ok, data } = await api('/auth/me', { method: 'DELETE', auth: true });
+  if (!ok) {
+    btn.disabled = false;
+    return toast(data?.error || 'Could not delete account. Try again.', 'err');
+  }
   closeScrim('#deleteScrim');
-  toast('Account deletion isn’t wired in this demo yet.', 'info');
+  logoutLocal(); // account is gone — clear local session and return to sign-in
+  toast('Your account has been permanently deleted.');
 };
 
 /* ============ ENTER APP ============ */

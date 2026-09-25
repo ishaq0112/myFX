@@ -211,3 +211,9 @@ export async function findLiveSession(tokenHash) {
 export async function deleteSession(tokenHash) {
   await sql`DELETE FROM sessions WHERE token_hash = ${tokenHash}`;
 }
+
+/** Permanently delete a user. Child rows (sessions, api_keys, usage_daily,
+ *  email_verifications, password_resets) are removed by ON DELETE CASCADE. */
+export async function deleteUser(userId) {
+  await sql`DELETE FROM users WHERE id = ${userId}`;
+}

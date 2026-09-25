@@ -10,6 +10,7 @@
 //   GET  /auth/google/callback      -> completes Google sign-in
 //   POST /auth/logout               (Bearer)             -> revoke session
 //   GET  /auth/me                   (Bearer)             -> current account
+//   DELETE /auth/me                 (Bearer)             -> delete account
 //
 // Verified email is required: password signups must click the emailed link
 // before they can log in; Google accounts are verified by Google.
@@ -46,6 +47,7 @@ import {
   deleteSessionsForUser,
   createSession,
   deleteSession,
+  deleteUser,
 } from './store.js';
 import { loginBlockedFor, recordLoginFailure, recordLoginSuccess } from './loginLimiter.js';
 
@@ -318,6 +320,19 @@ router.get('/auth/me', requireBearer, async (req, res, next) => {
     if (!session) return res.status(401).json({ error: 'Invalid or expired token.' });
     const user = await findUserById(session.userId);
     res.json({ user: publicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /auth/me  -> permanently deletes the account (irreversible)
+router.delete('/auth/me', requireBearer, async (req, res, next) => {
+  try {
+    const session = await findLiveSession(req.tokenHash);
+    if (!session) return res.status(401).json({ error: 'Invalid or expired token.' });
+    // Deleting the user cascades to sessions, api_keys, usage, and tokens.
+    await deleteUser(session.userId);
+    res.json({ ok: true, message: 'Account deleted.' });
   } catch (err) {
     next(err);
   }

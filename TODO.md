@@ -29,6 +29,8 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Email verification required before login.
 - [x] Password reset — "forgot password" flow: emailed single-use 1h token,
       revokes existing sessions on reset (`/auth/forgot-password`, `/auth/reset-password`).
+- [x] Delete account — `DELETE /auth/me`, type-your-email confirmation, cascades
+      to sessions/API keys/usage/tokens.
 - [x] Google OAuth **code** (pending credentials above to activate).
 - [x] UUID primary keys for users.
 - [x] API keys: create/list/revoke, `/v1/*` gated behind `X-API-Key`.
