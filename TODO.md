@@ -8,9 +8,9 @@ Running list of deferred work. Done items live in the code + README.
       `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (+ `APP_SECRET`) to `.env`,
       redirect URI `http://localhost:3000/auth/google/callback`. Then
       `/auth/google` goes live. Until then it returns 503 (harmless).
-- [ ] **Real email delivery** — currently dev-console mode (verification links
-      are logged / returned as `dev_verify_url`). Set `RESEND_API_KEY` +
-      `MAIL_FROM` in `.env` to send real emails.
+- [ ] **Activate email delivery** — *mailer is built: reusable `sendEmail`,
+      branded template, verification + password-reset senders; dev-console until
+      keys are set.* Add `RESEND_API_KEY` + `MAIL_FROM` (verified sender) in `.env`.
 - [ ] **Password reset** — "forgot password" flow (email a reset link).
 
 ## Next feature (Stage 3)
