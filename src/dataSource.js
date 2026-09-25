@@ -36,6 +36,11 @@ const todayUTC = () => new Date().toISOString().slice(0, 10);
 const dayOf = (ts) => new Date(ts).toISOString().slice(0, 10);
 
 let inFlight = null; // ensures two same-day requests don't both scrape
+// After an all-sources failure we serve the last snapshot and back off for this
+// long before hitting upstream again — otherwise every request would re-scrape
+// (thundering herd) while ECB/NBP are down.
+const FAIL_COOLDOWN_MS = 10 * 60 * 1000;
+let retryAfter = 0;
 
 /**
  * Get the merged EUR-based rate table, scraping at most once per calendar day.
@@ -47,6 +52,12 @@ export async function getEuroRates() {
   const snap = await getLatestSnapshot();
   if (snap && dayOf(snap.scrapedAt) === todayUTC()) {
     return toData(snap); // already scraped today -> serve stored data
+  }
+
+  // A recent scrape failed — serve the last snapshot instead of hammering the
+  // upstream feeds on every request until the back-off elapses.
+  if (snap && Date.now() < retryAfter) {
+    return toData(snap);
   }
 
   // New day (or nothing stored yet). Scrape once; concurrent callers share it.
@@ -84,13 +95,22 @@ async function scrapeAndStore() {
 
   if (Object.keys(rates).length === 0) {
     // Every source failed. Rather than error out, serve the last snapshot we
-    // stored (stale rates beat no rates). Only throw if we have nothing at all.
+    // stored (stale rates beat no rates) and back off so we don't re-scrape on
+    // every subsequent request. Only throw if we have nothing at all.
     const prev = await getLatestSnapshot();
-    if (prev) return toData(prev);
+    if (prev) {
+      retryAfter = Date.now() + FAIL_COOLDOWN_MS;
+      return toData(prev);
+    }
     throw new Error('All rate sources failed and no stored snapshot exists.');
   }
 
+  // A source can return rates but an unparseable date; data_date is NOT NULL,
+  // so fall back to today (UTC) rather than crashing the insert.
+  if (!date) date = todayUTC();
+
   const stored = await saveSnapshot({ dataDate: date, rates, provenance, sources });
+  retryAfter = 0; // healthy again — clear any back-off
   return toData(stored);
 }
 
