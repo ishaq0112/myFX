@@ -32,8 +32,8 @@
       <p class="ar-sub" id="authSub">Sign up to get started. Enter your details below.</p>
 
       <div class="field" id="nameField"><label>Name</label><input id="authName" placeholder="Your name" /></div>
-      <div class="field"><label>Email</label><input id="authEmail" type="email" placeholder="Enter email address" /></div>
-      <div class="field"><label>Password</label>
+      <div class="field" id="emailField"><label>Email</label><input id="authEmail" type="email" placeholder="Enter email address" /></div>
+      <div class="field" id="passField"><label>Password</label>
         <div class="pw"><input id="authPass" type="password" placeholder="Enter password" />
           <button type="button" class="pw-eye" data-eye="authPass" aria-label="Show password"><svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div>
       </div>
@@ -42,13 +42,15 @@
           <button type="button" class="pw-eye" data-eye="authConfirm" aria-label="Show password"><svg class="eye-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg><svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button></div>
       </div>
 
+      <a id="forgotLink" class="ar-forgot hidden">Forgot password?</a>
+
       <button class="btn btn-primary" id="authSubmit" style="width:100%;margin-top:6px">Create account</button>
       <div id="authNote" class="note info hidden"></div>
 
-      <div class="ar-div"><span>or continue with</span></div>
+      <div class="ar-div" id="authDiv"><span>or continue with</span></div>
       <button class="btn btn-outline ar-oauth" id="googleBtn" style="width:100%">Continue with Google</button>
 
-      <div class="ar-switch"><span id="authSwitchText">Already have an account?</span> <a id="authToggle">Log in</a></div>
+      <div class="ar-switch" id="authSwitch"><span id="authSwitchText">Already have an account?</span> <a id="authToggle">Log in</a></div>
     </div>
   </div>
 </section>

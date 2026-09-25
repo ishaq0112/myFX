@@ -56,6 +56,14 @@ export function initAuth() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         expires_at TIMESTAMPTZ NOT NULL
       )`;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        token_hash TEXT PRIMARY KEY,
+        user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        expires_at TIMESTAMPTZ NOT NULL
+      )`;
   })();
   return initDone;
 }
@@ -124,6 +132,37 @@ export async function upsertGoogleUser({ sub, email }) {
 
 export async function markEmailVerified(userId) {
   await sql`UPDATE users SET email_verified = true WHERE id = ${userId}`;
+}
+
+/** Set a new password hash (used by the reset flow). */
+export async function setPassword(userId, passwordHash) {
+  await sql`UPDATE users SET password_hash = ${passwordHash} WHERE id = ${userId}`;
+}
+
+// --- password reset tokens ---
+
+export async function createPasswordReset(userId, tokenHash, expiresAt) {
+  // One pending reset per user: replace any previous one.
+  await sql`DELETE FROM password_resets WHERE user_id = ${userId}`;
+  await sql`
+    INSERT INTO password_resets (token_hash, user_id, expires_at)
+    VALUES (${tokenHash}, ${userId}, ${expiresAt.toISOString()})`;
+}
+
+/** Consume a reset token: returns userId if valid, else null. Single-use. */
+export async function consumePasswordReset(tokenHash) {
+  const rows = await sql`
+    SELECT user_id, expires_at FROM password_resets WHERE token_hash = ${tokenHash}`;
+  const row = rows[0];
+  if (!row) return null;
+  await sql`DELETE FROM password_resets WHERE token_hash = ${tokenHash}`;
+  if (new Date(row.expires_at).getTime() <= Date.now()) return null; // expired
+  return row.user_id;
+}
+
+/** Revoke every session for a user (e.g. after a password reset). */
+export async function deleteSessionsForUser(userId) {
+  await sql`DELETE FROM sessions WHERE user_id = ${userId}`;
 }
 
 // --- email verification tokens ---

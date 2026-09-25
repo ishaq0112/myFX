@@ -43,21 +43,38 @@ function toast(msg, type = 'ok') {
 
 /* ============ AUTH ============ */
 let authMode = 'signup';
+let resetToken = null; // set when arriving via a ?reset=<token> link
+const showEl = (id, on) => $(id).classList.toggle('hidden', !on);
 function setAuthMode(mode) {
   authMode = mode;
-  const signup = mode === 'signup';
-  $('#authHeading').textContent = signup ? 'Create an account' : 'Welcome back';
-  $('#authSub').textContent = signup
-    ? 'Sign up to get started. Enter your details below.'
-    : 'Log in to your MyFX dashboard.';
-  $('#authSubmit').textContent = signup ? 'Create account' : 'Log in';
-  $('#nameField').classList.toggle('hidden', !signup);
-  $('#confirmField').classList.toggle('hidden', !signup);
-  $('#authSwitchText').textContent = signup ? 'Already have an account?' : 'New to MyFX?';
-  $('#authToggle').textContent = signup ? 'Log in' : 'Create one';
+  const cfg = {
+    signup: { heading: 'Create an account', sub: 'Sign up to get started. Enter your details below.', submit: 'Create account' },
+    login:  { heading: 'Welcome back', sub: 'Log in to your MyFX dashboard.', submit: 'Log in' },
+    forgot: { heading: 'Reset your password', sub: "Enter your email and we'll send you a link to reset it.", submit: 'Send reset link' },
+    reset:  { heading: 'Set a new password', sub: 'Choose a new password for your account.', submit: 'Update password' },
+  }[mode];
+  $('#authHeading').textContent = cfg.heading;
+  $('#authSub').textContent = cfg.sub;
+  $('#authSubmit').textContent = cfg.submit;
+
+  showEl('#nameField', mode === 'signup');
+  showEl('#emailField', mode === 'signup' || mode === 'login' || mode === 'forgot');
+  showEl('#passField', mode === 'signup' || mode === 'login' || mode === 'reset');
+  showEl('#confirmField', mode === 'signup' || mode === 'reset');
+  showEl('#forgotLink', mode === 'login');
+  const social = mode === 'signup' || mode === 'login';
+  showEl('#authDiv', social);
+  showEl('#googleBtn', social);
+
+  if (mode === 'signup') { $('#authSwitchText').textContent = 'Already have an account?'; $('#authToggle').textContent = 'Log in'; }
+  else if (mode === 'login') { $('#authSwitchText').textContent = 'New to MyFX?'; $('#authToggle').textContent = 'Create one'; }
+  else { $('#authSwitchText').textContent = 'Remembered your password?'; $('#authToggle').textContent = 'Back to log in'; }
+
   $('#authNote').classList.add('hidden');
 }
-$('#authToggle').onclick = () => setAuthMode(authMode === 'signup' ? 'login' : 'signup');
+$('#authToggle').onclick = () =>
+  setAuthMode(authMode === 'signup' ? 'login' : authMode === 'login' ? 'signup' : 'login');
+$('#forgotLink').onclick = () => setAuthMode('forgot');
 
 // show/hide password toggles
 $$('.pw-eye').forEach((b) => {
@@ -88,7 +105,44 @@ function note(type, html) {
   n.innerHTML = html;
   n.classList.remove('hidden');
 }
+// Strip ?reset=... from the address bar so a refresh doesn't re-trigger reset mode.
+function clearResetParam() {
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+}
+
 $('#authSubmit').onclick = async () => {
+  // Password-reset request: only an email is needed.
+  if (authMode === 'forgot') {
+    const email = $('#authEmail').value.trim();
+    if (!email) return note('err', 'Enter your email address.');
+    const { ok, data } = await api('/auth/forgot-password', { method: 'POST', body: { email } });
+    if (!ok) return note('err', data?.error || 'Something went wrong. Try again.');
+    if (data.dev_reset_url) {
+      note('info', 'Reset link ready (dev mode): <button class="btn btn-primary btn-sm" id="devReset" style="margin-top:8px">Set new password</button>');
+      $('#devReset').onclick = () => {
+        try { resetToken = new URL(data.dev_reset_url).searchParams.get('reset'); } catch (e) { resetToken = null; }
+        setAuthMode('reset');
+      };
+    } else {
+      note('ok', data.message || 'If an account exists for that email, a reset link has been sent.');
+    }
+    return;
+  }
+
+  // Set a new password from an emailed reset token.
+  if (authMode === 'reset') {
+    const password = $('#authPass').value;
+    if (password.length < 8) return note('err', 'Password must be at least 8 characters.');
+    if (password !== $('#authConfirm').value) return note('err', "Passwords don't match.");
+    const { ok, data } = await api('/auth/reset-password', { method: 'POST', body: { token: resetToken, password } });
+    if (!ok) return note('err', data?.error || 'Reset link is invalid or expired. Request a new one.');
+    clearResetParam();
+    if (data.token) { localStorage.setItem(TOKEN_KEY, data.token); return enterApp(); }
+    note('ok', 'Password updated. You can log in now.');
+    setAuthMode('login');
+    return;
+  }
+
   const email = $('#authEmail').value.trim();
   const password = $('#authPass').value;
   if (!email || !password) return note('err', 'Email and password are required.');
@@ -692,4 +746,12 @@ $('#doConvert').onclick = async () => {
 };
 
 /* ============ BOOT ============ */
-if (localStorage.getItem(TOKEN_KEY)) enterApp();
+// A password-reset link (/app/?reset=<token>) takes priority over any saved
+// session: show the "set new password" form instead of auto-entering the app.
+const resetParam = new URLSearchParams(window.location.search).get('reset');
+if (resetParam) {
+  resetToken = resetParam;
+  setAuthMode('reset');
+} else if (localStorage.getItem(TOKEN_KEY)) {
+  enterApp();
+}

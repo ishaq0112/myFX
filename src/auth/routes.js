@@ -3,6 +3,8 @@
 //   POST /auth/signup               { email, password }  -> sends verify link
 //   GET  /auth/verify?token=...     -> verifies an email, returns a session
 //   POST /auth/resend-verification  { email }            -> new verify link
+//   POST /auth/forgot-password      { email }            -> emails a reset link
+//   POST /auth/reset-password       { token, password }  -> sets a new password
 //   POST /auth/login                { email, password }  -> session token
 //   GET  /auth/google               -> redirect to Google sign-in
 //   GET  /auth/google/callback      -> completes Google sign-in
@@ -13,12 +15,13 @@
 // before they can log in; Google accounts are verified by Google.
 //
 // NOTE: passwords travel in the request body — serve over HTTPS in production.
-// Login has brute-force throttling (see loginLimiter.js); password reset is still deferred.
+// Login has brute-force throttling (see loginLimiter.js). Password reset issues a
+// short-lived (1h), single-use emailed token and revokes existing sessions.
 
 import express from 'express';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { newToken, hashToken, sessionExpiry } from './tokens.js';
-import { sendVerificationEmail, mailerMode } from './mailer.js';
+import { sendVerificationEmail, sendPasswordResetEmail, mailerMode } from './mailer.js';
 import {
   googleConfigured,
   makeState,
@@ -37,6 +40,10 @@ import {
   markEmailVerified,
   createVerification,
   consumeVerification,
+  setPassword,
+  createPasswordReset,
+  consumePasswordReset,
+  deleteSessionsForUser,
   createSession,
   deleteSession,
 } from './store.js';
@@ -47,6 +54,7 @@ const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const RESET_TTL_MS = 60 * 60 * 1000; // 1h — password-reset links are short-lived
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 // Short-circuit if there's no database; otherwise ensure tables exist first.
@@ -161,6 +169,57 @@ router.post('/auth/resend-verification', async (req, res, next) => {
       return res.json(payload);
     }
     res.json({ message: 'If that account needs verification, a link has been sent.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /auth/forgot-password  { email }  -> emails a reset link
+// Always replies the same way so we never reveal which emails exist.
+router.post('/auth/forgot-password', async (req, res, next) => {
+  const generic = { message: 'If an account exists for that email, a reset link has been sent.' };
+  try {
+    const { email } = normalizeCredentials(req.body);
+    const user = email && EMAIL_RE.test(email) ? await findUserByEmail(email) : null;
+
+    // Only password accounts can reset a password (Google users have none).
+    if (user && user.password_hash && user.auth_provider === 'password') {
+      const { raw, hash } = newToken();
+      await createPasswordReset(user.id, hash, new Date(Date.now() + RESET_TTL_MS));
+      const link = `${APP_URL}/app/?reset=${raw}`;
+      await sendPasswordResetEmail(user.email, link);
+      if (mailerMode() === 'dev-console') return res.json({ ...generic, dev_reset_url: link });
+    }
+    res.json(generic);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /auth/reset-password  { token, password }  -> sets a new password
+router.post('/auth/reset-password', async (req, res, next) => {
+  try {
+    const raw = String(req.body?.token || '');
+    const password = String(req.body?.password ?? '');
+    if (!raw) return res.status(400).json({ error: 'Missing reset token.' });
+    if (password.length < MIN_PASSWORD) {
+      return res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD} characters.` });
+    }
+
+    const userId = await consumePasswordReset(hashToken(raw));
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid or expired reset link.' });
+    }
+
+    await setPassword(userId, await hashPassword(password));
+    // A reset can also confirm ownership of the inbox, and invalidates any
+    // sessions an attacker might hold — revoke all existing sessions.
+    await markEmailVerified(userId);
+    await deleteSessionsForUser(userId);
+
+    const user = await findUserById(userId);
+    const token = await issueSession(userId);
+    res.json({ message: 'Password updated.', token, user: publicUser(user) });
   } catch (err) {
     next(err);
   }

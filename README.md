@@ -112,7 +112,16 @@ token. Links expire in 24h.
 reply, doesn't reveal whether the email exists).
 
 **`POST /auth/login`** `{ "email", "password" }` — returns a session token.
-`401` bad credentials, **`403` if the email isn't verified yet**.
+`401` bad credentials, **`403` if the email isn't verified yet**. Repeated
+failures are throttled (brute-force protection) and return `429`.
+
+**`POST /auth/forgot-password`** `{ "email" }` — emails a password-reset link
+(generic reply, doesn't reveal whether the email exists). The token is single-use
+and expires in 1h; dev mode returns `dev_reset_url`.
+
+**`POST /auth/reset-password`** `{ "token", "password" }` — sets a new password,
+revokes all existing sessions, and returns a fresh session token. `400` if the
+token is invalid/expired or the password is too short.
 
 ### Sign in with Google
 

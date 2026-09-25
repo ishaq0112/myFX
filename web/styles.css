@@ -145,6 +145,8 @@ input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .ar-switch{text-align:center;color:var(--muted);font-size:13px;margin-top:20px}
 .ar-switch a{color:var(--accent-ink);font-weight:700;cursor:pointer}
 .ar-switch a:hover{text-decoration:underline}
+.ar-forgot{display:block;text-align:right;margin:-6px 0 4px;color:var(--accent-ink);font-size:12.5px;font-weight:600;cursor:pointer}
+.ar-forgot:hover{text-decoration:underline}
 .brand{display:flex;align-items:center;gap:9px;justify-content:center;margin-bottom:18px;font-weight:800;font-size:19px}
 .brand .mark{width:30px;height:30px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800}
 .brand span{color:var(--accent)}

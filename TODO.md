@@ -11,7 +11,6 @@ Running list of deferred work. Done items live in the code + README.
 - [ ] **Activate email delivery** — *mailer is built: reusable `sendEmail`,
       branded template, verification + password-reset senders; dev-console until
       keys are set.* Add `RESEND_API_KEY` + `MAIL_FROM` (verified sender) in `.env`.
-- [ ] **Password reset** — "forgot password" flow (email a reset link).
 
 ## Next feature (Stage 3)
 - [ ] **Stripe billing** — wire real payment + let a plan change move the user's
@@ -28,6 +27,8 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Stage 1: public FX API (ECB + NBP), daily scrape persisted to Neon.
 - [x] Email/password accounts + sessions (scrypt, revocable Bearer tokens).
 - [x] Email verification required before login.
+- [x] Password reset — "forgot password" flow: emailed single-use 1h token,
+      revokes existing sessions on reset (`/auth/forgot-password`, `/auth/reset-password`).
 - [x] Google OAuth **code** (pending credentials above to activate).
 - [x] UUID primary keys for users.
 - [x] API keys: create/list/revoke, `/v1/*` gated behind `X-API-Key`.
