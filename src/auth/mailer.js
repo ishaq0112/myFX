@@ -14,7 +14,10 @@ export function mailerMode() {
   return RESEND_API_KEY ? 'resend' : 'dev-console';
 }
 
-/** Core send. In dev mode (no key) it logs instead of sending. `devLink` is the
+/** Core send. Never throws: a failed send is logged and returned as
+ *  { delivered: false, error }, so a provider outage or rejection can't break
+ *  signup or change replies that must not reveal whether an account exists.
+ *  In dev mode (no key) it logs instead of sending. `devLink` is the
  *  actionable URL to surface in the console for local testing. */
 export async function sendEmail({ to, subject, html, devLink }) {
   if (!RESEND_API_KEY) {
@@ -27,21 +30,27 @@ export async function sendEmail({ to, subject, html, devLink }) {
     return { delivered: false, mode: 'dev-console' };
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: MAIL_FROM, to, subject, html }),
-    signal: AbortSignal.timeout(8000),
-  });
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new Error(`Resend send failed: HTTP ${res.status} ${detail}`);
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ from: MAIL_FROM, to, subject, html }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} ${detail.slice(0, 300)}`);
+    }
+    return { delivered: true, mode: 'resend' };
+  } catch (err) {
+    // Rejections (e.g. Resend testing mode only allows your own address),
+    // network errors, and timeouts all land here.
+    console.error(`[mailer] Could not send "${subject}" to ${to}: ${err.message}`);
+    return { delivered: false, mode: 'resend', error: err.message };
   }
-  return { delivered: true, mode: 'resend' };
 }
 
 // Branded, email-client-safe HTML (inline styles + tables — no external CSS).

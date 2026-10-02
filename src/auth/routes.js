@@ -97,14 +97,19 @@ async function issueSession(userId) {
   return raw;
 }
 
-// Create a verification token, store its hash, email the link. Returns the link
-// (handy to surface in dev mode).
-async function sendVerification(userId, email) {
+// Create a verification token, store its hash, and return the link to email
+// (also handy to surface in dev mode).
+async function newVerificationLink(userId) {
   const { raw, hash } = newToken();
   await createVerification(userId, hash, new Date(Date.now() + VERIFY_TTL_MS));
-  const link = `${APP_URL}/auth/verify?token=${raw}`;
-  await sendVerificationEmail(email, link);
-  return link;
+  return `${APP_URL}/auth/verify?token=${raw}`;
+}
+
+// For replies that must look the same whether or not the account exists: don't
+// make the response wait on the email, so a slow or failed send can't change it.
+// (sendEmail never rejects; the catch is a guard against a process crash.)
+function sendInBackground(promise) {
+  promise.catch((err) => console.error('[mailer]', err.message));
 }
 
 // POST /auth/signup  -> creates an UNVERIFIED account and emails a verify link
@@ -120,12 +125,18 @@ router.post('/auth/signup', async (req, res, next) => {
 
     const name = req.body?.name != null ? String(req.body.name).trim().slice(0, 80) || null : null;
     const user = await createUser(email, await hashPassword(password), name);
-    const link = await sendVerification(user.id, user.email);
+    const link = await newVerificationLink(user.id);
+    // Wait here (unlike resend/forgot): this user just created the account, so
+    // telling them the email didn't go out reveals nothing and tells them what to do.
+    const sent = await sendVerificationEmail(user.email, link);
 
     const payload = {
-      message: 'Account created. Check your email to verify before logging in.',
+      message: sent.error
+        ? 'Account created, but we couldn’t send the verification email. Log in and use "Resend verification" to try again.'
+        : 'Account created. Check your email to verify before logging in.',
       user: publicUser(user),
     };
+    if (sent.error) payload.email_failed = true;
     // In dev mode (no email provider) expose the link so testing is easy.
     if (mailerMode() === 'dev-console') payload.dev_verify_url = link;
     res.status(201).json(payload);
@@ -165,7 +176,8 @@ router.post('/auth/resend-verification', async (req, res, next) => {
     // Only act for an unverified password account, but always reply the same way
     // so we don't reveal which emails exist.
     if (user && !user.email_verified && user.auth_provider === 'password') {
-      const link = await sendVerification(user.id, user.email);
+      const link = await newVerificationLink(user.id);
+      sendInBackground(sendVerificationEmail(user.email, link));
       const payload = { message: 'If that account needs verification, a link has been sent.' };
       if (mailerMode() === 'dev-console') payload.dev_verify_url = link;
       return res.json(payload);
@@ -189,7 +201,7 @@ router.post('/auth/forgot-password', async (req, res, next) => {
       const { raw, hash } = newToken();
       await createPasswordReset(user.id, hash, new Date(Date.now() + RESET_TTL_MS));
       const link = `${APP_URL}/app/?reset=${raw}`;
-      await sendPasswordResetEmail(user.email, link);
+      sendInBackground(sendPasswordResetEmail(user.email, link));
       if (mailerMode() === 'dev-console') return res.json({ ...generic, dev_reset_url: link });
     }
     res.json(generic);

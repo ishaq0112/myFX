@@ -164,6 +164,8 @@ $('#authSubmit').onclick = async () => {
         if (d.token) { localStorage.setItem(TOKEN_KEY, d.token); enterApp(); }
         else note('err', d.error || 'Verification failed.');
       };
+    } else if (data.email_failed) {
+      note('warn', 'Account created, but we couldn’t send the verification email. Log in and choose <b>Resend verification</b> to try again.');
     } else {
       note('ok', 'Account created. Check your email to verify, then log in.');
     }

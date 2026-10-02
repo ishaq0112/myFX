@@ -182,7 +182,10 @@ limit + monthly quota, `429` when exceeded). All routes below are *(Bearer)*.
 
 > **Notes:** passwords travel in the request body — serve over **HTTPS** in
 > production. Email delivery uses Resend when `RESEND_API_KEY` is set, otherwise
-> dev-console mode. Login has brute-force throttling.
+> dev-console mode. A failed send never fails the request: it's logged as
+> `[mailer] Could not send …` with the provider's reason, signup tells the user to
+> use "Resend verification", and forgot-password / resend-verification send in the
+> background so their reply is the same either way. Login has brute-force throttling.
 
 ## Data & limitations
 - **Sources:** ECB + National Bank of Poland — both official, free, and
