@@ -8,9 +8,12 @@ Running list of deferred work. Done items live in the code + README.
       `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (+ `APP_SECRET`) to `.env`,
       redirect URI `http://localhost:3000/auth/google/callback`. Then
       `/auth/google` goes live. Until then it returns 503 (harmless).
-- [ ] **Activate email delivery** — *mailer is built: reusable `sendEmail`,
-      branded template, verification + password-reset senders; dev-console until
-      keys are set.* Add `RESEND_API_KEY` + `MAIL_FROM` (verified sender) in `.env`.
+- [ ] **Email delivery for real customers** — *Resend is live locally
+      (`RESEND_API_KEY` set; tested end-to-end) but in testing mode: the default
+      `onboarding@resend.dev` sender only delivers to the Resend account's own
+      email.* To open it up: verify a domain in Resend, set
+      `MAIL_FROM=MyFX <noreply@yourdomain.com>`, and swap the onboarding
+      (full-access) key for a **Sending access** key.
 
 ## Next feature (Stage 3)
 - [ ] **Stripe billing** — wire real payment + let a plan change move the user's
