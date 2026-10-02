@@ -8,9 +8,20 @@ import { hasDb } from '../db.js';
 import { requireAuth } from '../auth/middleware.js';
 import { findUserById } from '../auth/store.js';
 import { limitsFor } from '../plans.js';
-import { initUsage, usageSummary, dailySeries } from './store.js';
+import { initUsage, usageSummary, dailySeries, recentActivity } from './store.js';
 
 const router = express.Router();
+
+// GET /usage/activity?limit=5  -> most recent /v1 calls for the Activity Log
+router.get('/usage/activity', requireAuth, async (req, res, next) => {
+  try {
+    if (!hasDb) return res.status(503).json({ error: 'Usage unavailable: DATABASE_URL is not configured.' });
+    await initUsage();
+    res.json({ activity: await recentActivity(req.user.id, req.query.limit) });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // GET /usage/daily?days=30  -> per-day request counts for the chart
 router.get('/usage/daily', requireAuth, async (req, res, next) => {
@@ -31,7 +42,7 @@ router.get('/usage', requireAuth, async (req, res, next) => {
     const user = await findUserById(req.user.id);
     const plan = user?.plan || 'free';
     const limits = limitsFor(plan);
-    const { month, today, byEndpoint } = await usageSummary(req.user.id);
+    const { month, today, byEndpoint, previous, outcomes } = await usageSummary(req.user.id);
     res.json({
       period: new Date().toISOString().slice(0, 7), // YYYY-MM
       plan,
@@ -40,6 +51,13 @@ router.get('/usage', requireAuth, async (req, res, next) => {
       today,
       remaining: limits.monthly != null ? Math.max(0, limits.monthly - month) : null,
       byEndpoint,
+      previous, // same span of last month, for the month-over-month trend
+      // Share of this month's calls (incl. 429 rejections) that returned 4xx/5xx.
+      errors: {
+        total: outcomes.total,
+        failed: outcomes.failed,
+        rate: outcomes.total ? outcomes.failed / outcomes.total : null,
+      },
     });
   } catch (err) {
     next(err);

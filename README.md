@@ -165,13 +165,24 @@ curl "localhost:3000/v1/latest?base=USD" -H "X-API-Key: myfx_live_..."
 ```
 
 Statuses: `active` (works) · `suspended` (temporarily off, reversible) ·
-`revoked` (permanently off). Usage metering & rate limits build on this next.
+`revoked` (permanently off).
+
+## Usage
+
+Every `/v1/*` call is metered against the key owner's plan (per-minute rate
+limit + monthly quota, `429` when exceeded). All routes below are *(Bearer)*.
+
+- **`GET /usage`** — this month's usage vs the plan: `used`, `today`,
+  `remaining`, per-endpoint `byEndpoint`, `previous` (the same days last month,
+  for the trend), and `errors` `{ total, failed, rate }` (calls that returned
+  4xx/5xx, including 429 rejections).
+- **`GET /usage/daily?days=30`** — requests per day, zero-filled, for the chart.
+- **`GET /usage/activity?limit=5`** — the most recent calls (path, params, status,
+  latency, key name). Only each user's newest 200 calls are kept.
 
 > **Notes:** passwords travel in the request body — serve over **HTTPS** in
 > production. Email delivery uses Resend when `RESEND_API_KEY` is set, otherwise
-> dev-console mode. Login has brute-force throttling; password reset is still deferred. The
-> `/v1/*` rate endpoints remain open — gating them behind per-user **API keys**
-> is the next step.
+> dev-console mode. Login has brute-force throttling.
 
 ## Data & limitations
 - **Sources:** ECB + National Bank of Poland — both official, free, and
@@ -192,5 +203,5 @@ That's it — coverage widens with zero changes anywhere else.
 1. ✅ **Stage 1:** Working public API + daily scrape persisted to Neon.
 2. ✅ **Stage 2:** User accounts & auth → API keys → **usage metering & per-plan
    rate limits/quotas (enforced with 429; see `src/usage/`, `src/plans.js`)**.
-3. 🔨 **Stage 3:** Sign-up dashboard ✅ → **Stripe billing (next — the plans and
-   quotas are live; wiring real payment is what's left)**.
+3. 🔨 **Stage 3:** Sign-up dashboard ✅ → **payments via Dodo Payments (next —
+   the plans and quotas are live; wiring real payment is what's left)**.

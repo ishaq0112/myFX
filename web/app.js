@@ -32,6 +32,9 @@ async function api(path, { method = 'GET', body, auth = false, apiKey = false } 
   }
 }
 
+// Escape user-controlled text (key names, logged request params) before it goes into innerHTML.
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
 /* ---------- toasts ---------- */
 function toast(msg, type = 'ok') {
   const el = document.createElement('div');
@@ -539,7 +542,75 @@ async function loadOverview() {
   const u = await api('/usage', { auth: true });
   if (u.ok) applyUsage(u.data);
   loadDaily();
+  loadActivity();
 }
+
+// "↑ 12.5%" / "↓ 4%" / "0%". Hidden when there's no last-month usage to compare.
+function setDelta(id, pct, digits) {
+  const el = document.getElementById(id); if (!el) return;
+  if (pct == null || !isFinite(pct)) { el.textContent = ''; el.classList.add('hidden'); return; }
+  const v = Number(Math.abs(pct).toFixed(digits));
+  el.textContent = v === 0 ? '0%' : `${pct > 0 ? '↑' : '↓'} ${v.toLocaleString('en-US')}%`;
+  el.classList.toggle('down', pct < 0 && v !== 0);
+  el.classList.remove('hidden');
+}
+
+// Error rate as a percentage; "—" until there are calls to measure.
+function fmtRate(rate, failed) {
+  if (rate == null) return '—';
+  const pct = rate * 100;
+  if (failed > 0 && pct < 0.01) return '<0.01%';
+  return pct.toLocaleString('en-US', { maximumFractionDigits: 2 }) + '%';
+}
+
+/* ---------- activity log (GET /usage/activity) ---------- */
+const ACT_ICON = {
+  '/latest': '<path d="M12 5v14M19 12l-7 7-7-7"/>',
+  '/convert': '<path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/>',
+  '/currencies': '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+};
+const ACT_ICON_OTHER = '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>';
+const ACT_SHOWN = 5; // rows before "Show more"
+let ACT = [];        // recent calls, newest first; null if loading failed
+let actExpanded = false;
+
+// One-line summary of a call's params, e.g. "base=USD" or "100 EUR→JPY".
+function actDetail(a) {
+  const p = new URLSearchParams(a.params || '');
+  if (a.path === '/latest') return 'base=' + (p.get('base') || 'USD');
+  if (a.path === '/convert') return `${p.get('amount') ? p.get('amount') + ' ' : ''}${p.get('from') || '?'}→${p.get('to') || '?'}`;
+  if (a.path === '/currencies') return 'full list';
+  return a.params || '';
+}
+
+function renderActivity() {
+  const box = $('#ovAct'), more = $('#ovSeeAll');
+  if (!box) return;
+  if (!ACT || !ACT.length) {
+    box.innerHTML = ACT
+      ? '<div class="act-empty">No API calls yet. <a id="actFirstKey">Create a key</a> and make your first request. Calls show up here as they happen.</div>'
+      : '<div class="act-empty">Couldn’t load recent activity. Refresh to try again.</div>';
+    const a = $('#actFirstKey'); if (a) a.onclick = () => go('keys');
+    if (more) more.classList.add('hidden');
+    return;
+  }
+  const rows = actExpanded ? ACT : ACT.slice(0, ACT_SHOWN);
+  box.innerHTML = rows.map((a) => {
+    const small = [actDetail(a), a.key_name].filter(Boolean).map(esc).join(' · ');
+    return `<div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ACT_ICON[a.path] || ACT_ICON_OTHER}</svg></span><div class="nm"><b>/v1${esc(a.path)}</b><small>${small}</small></div><div class="stt ${a.status < 400 ? 'ok' : 'fail'}"><span class="dot"></span>${Number(a.status)}</div><div class="amt"><b>${Number(a.duration_ms).toLocaleString('en-US')} ms</b><small>${timeAgo(a.created_at)}</small></div></div>`;
+  }).join('');
+  if (more) {
+    more.classList.toggle('hidden', ACT.length <= ACT_SHOWN);
+    more.textContent = actExpanded ? 'Show less' : 'Show more';
+  }
+}
+
+async function loadActivity() {
+  const r = await api('/usage/activity?limit=25', { auth: true });
+  ACT = r.ok && Array.isArray(r.data?.activity) ? r.data.activity : null;
+  renderActivity();
+}
+$('#ovSeeAll').onclick = () => { actExpanded = !actExpanded; renderActivity(); };
 
 // Wire the real metered usage from GET /usage into the overview + sidebar.
 function applyUsage(d) {
@@ -555,6 +626,11 @@ function applyUsage(d) {
   const tot = (be.latest || 0) + (be.convert || 0) + (be.currencies || 0);
   const w = (id, v) => { const el = document.getElementById(id); if (el) el.style.width = (tot ? Math.round((v / tot) * 100) : 0) + '%'; };
   w('ovSegLatest', be.latest || 0); w('ovSegConvert', be.convert || 0); w('ovSegCurr', be.currencies || 0);
+  // Month-over-month trend: this month so far vs the same days last month.
+  const delta = d.previous ? ((used - d.previous) / d.previous) * 100 : null;
+  setDelta('ovDelta', delta, 1);
+  setDelta('ovApiDelta', delta, 0);
+  set('ovErr', fmtRate(d.errors?.rate ?? null, d.errors?.failed || 0));
   set('sidePlanQuota', monthly != null ? n(monthly) + ' requests / month' : 'Unlimited requests');
   const bar = document.getElementById('sideUsageBar');
   if (bar) bar.style.width = (monthly ? Math.min(100, Math.round((used / monthly) * 100)) : 4) + '%';
@@ -585,10 +661,10 @@ async function loadKeys() {
     const canRevoke = k.status === 'active' || k.status === 'suspended';
     const label = k.status === 'revoked' ? 'Revoked' : 'Revoke';
     return `<div class="krow">
-      <div class="kmain"><div class="kname">${k.name || 'untitled'} ${badge(k.status)}</div><div class="kmask">myfx_live_••••${(k.id || '').slice(-4)}</div></div>
+      <div class="kmain"><div class="kname">${esc(k.name || 'untitled')} ${badge(k.status)}</div><div class="kmask">myfx_live_••••${(k.id || '').slice(-4)}</div></div>
       <div class="kcol"><div class="klabel">Created</div><div class="kval">${fmtDate(k.created_at)}</div></div>
       <div class="kcol"><div class="klabel">Last used</div><div class="kval">${k.last_used_at ? timeAgo(k.last_used_at) : 'Never'}</div></div>
-      <div class="kact"><button class="btn btn-danger btn-sm" data-revoke="${k.id}" data-name="${k.name || 'untitled'}" ${canRevoke ? '' : 'disabled'}>${label}</button></div>
+      <div class="kact"><button class="btn btn-danger btn-sm" data-revoke="${k.id}" data-name="${esc(k.name || 'untitled')}" ${canRevoke ? '' : 'disabled'}>${label}</button></div>
     </div>`;
   }).join('');
   $$('[data-revoke]').forEach((b) => (b.onclick = () => { if (!b.disabled) openRevoke(b.dataset.revoke, b.dataset.name); }));

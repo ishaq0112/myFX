@@ -41,8 +41,9 @@ app.use(keysRouter); // /keys (create/list/revoke) — session-protected
 app.use(usageRouter); // /usage — session-protected (this month's metered usage)
 
 // Everything under /v1/* requires a valid API key (X-API-Key header), then is
-// metered: per-minute rate limit + monthly quota (429 when exceeded).
-app.use('/v1', requireApiKey, meterUsage);
+// metered: per-minute rate limit + monthly quota (429 when exceeded). The first
+// step stamps arrival time so logged latency includes the key lookup.
+app.use('/v1', (req, _res, next) => { req.receivedAt = Date.now(); next(); }, requireApiKey, meterUsage);
 
 // GET /v1/latest?base=USD  -> every currency relative to `base`
 app.get('/v1/latest', async (req, res) => {

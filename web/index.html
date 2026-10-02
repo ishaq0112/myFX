@@ -107,10 +107,10 @@
           <!-- ROW 1: stat cards + quick actions -->
           <div class="drow-top">
             <div class="mini-stats">
-              <div class="mini"><div class="mtop"><span class="mi t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><div class="k">Requests this month</div></div><div class="v" id="ovMonth">47,318</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="k">Requests today</div></div><div class="v" id="ovToday">1,842</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></span><div class="k">Requests this month</div></div><div class="v" id="ovMonth">—</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="k">Requests today</div></div><div class="v" id="ovToday">—</div></div>
               <div class="mini"><div class="mtop"><span class="mi t3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5 5 0 1 1-7.07 7.07 5 5 0 0 1 7.07-7.07zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg></span><div class="k">Active keys</div></div><div class="v" id="stKeys">—</div></div>
-              <div class="mini"><div class="mtop"><span class="mi t4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="k">Error rate</div></div><div class="v">0.31%</div></div>
+              <div class="mini"><div class="mtop"><span class="mi t4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span><div class="k">Error rate</div></div><div class="v" id="ovErr" title="Share of this month's calls that returned an error (4xx/5xx), including rate-limit and quota rejections">—</div></div>
             </div>
             <div class="card card-pad qa-card">
               <h3>Quick Actions</h3>
@@ -124,31 +124,27 @@
           <!-- ROW 2: full-width graph -->
           <div class="card chartcard chartcard-full">
             <div class="cc-head">
-              <div><div class="eyebrow">Requests this month</div><div class="cc-num"><span id="ovMonthBig">47,318</span> <span class="cc-delta">↑ 23.4%</span></div></div>
+              <div><div class="eyebrow">Requests this month</div><div class="cc-num"><span id="ovMonthBig">—</span> <span class="cc-delta" id="ovDelta" title="vs. the same days last month"></span></div></div>
               <div class="range" id="ovRange"><button class="active" data-r="month">Month</button><button data-r="30d">30 days</button></div>
             </div>
             <div class="cc-plot">
               <svg id="ovChart" viewBox="0 0 1000 240" preserveAspectRatio="none"></svg>
               <div class="cc-tip" id="ovTip"></div>
             </div>
-            <div class="chart-x" id="ovX"><span>Aug 1</span><span>Aug 8</span><span>Aug 15</span><span>Aug 22</span><span>Aug 30</span></div>
+            <div class="chart-x" id="ovX"></div>
           </div>
 
           <!-- ROW 3: activity log + api overview -->
           <div class="drow-bot">
             <div class="card card-pad actlog">
-              <div class="head"><div><h3>Activity Log</h3><div class="sub">All recent calls, keys, and quota events.</div></div><span class="seeall">See all</span></div>
-              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span><div class="nm"><b>/v1/latest</b><small>base=USD · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>41 ms</b><small>2m ago</small></div></div>
-              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="nm"><b>/v1/convert</b><small>EUR→JPY · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>58 ms</b><small>6m ago</small></div></div>
-              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></span><div class="nm"><b>/v1/latest</b><small>base=GBP · staging</small></div><div class="stt fail"><span class="dot"></span>429</div><div class="amt"><b>—</b><small>17m ago</small></div></div>
-              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span><div class="nm"><b>/v1/currencies</b><small>full list · checkout-service</small></div><div class="stt ok"><span class="dot"></span>200</div><div class="amt"><b>12 ms</b><small>41m ago</small></div></div>
-              <div class="actrow"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="nm"><b>/v1/convert</b><small>USD→INR · ci-pipeline</small></div><div class="stt fail"><span class="dot"></span>401</div><div class="amt"><b>—</b><small>1h 04m ago</small></div></div>
+              <div class="head"><div><h3>Activity Log</h3><div class="sub">Your latest API calls, including rate-limit and quota rejections.</div></div><span class="seeall hidden" id="ovSeeAll">See all</span></div>
+              <div id="ovAct"></div>
             </div>
 
             <div class="card card-pad">
-              <div class="ov-head"><div><h3>API Overview</h3><div class="sub" id="ovApiSub">47,318 requests this month</div></div><div class="ov-delta">23%↑</div></div>
-              <div class="seg"><i id="ovSegLatest" style="width:65%;background:var(--accent)"></i><i id="ovSegConvert" style="width:26%;background:#1c1917"></i><i id="ovSegCurr" style="width:9%;background:#f6b27a"></i></div>
-              <div class="seg-legend"><span><i class="sw" style="background:var(--accent)"></i>latest <b id="ovLegLatest">30,914</b></span><span><i class="sw" style="background:#1c1917"></i>convert <b id="ovLegConvert">12,466</b></span><span><i class="sw" style="background:#f6b27a"></i>currencies <b id="ovLegCurr">3,938</b></span></div>
+              <div class="ov-head"><div><h3>API Overview</h3><div class="sub" id="ovApiSub">Requests this month</div></div><div class="ov-delta" id="ovApiDelta" title="vs. the same days last month"></div></div>
+              <div class="seg"><i id="ovSegLatest" style="width:0;background:var(--accent)"></i><i id="ovSegConvert" style="width:0;background:#1c1917"></i><i id="ovSegCurr" style="width:0;background:#f6b27a"></i></div>
+              <div class="seg-legend"><span><i class="sw" style="background:var(--accent)"></i>latest <b id="ovLegLatest">—</b></span><span><i class="sw" style="background:#1c1917"></i>convert <b id="ovLegConvert">—</b></span><span><i class="sw" style="background:#f6b27a"></i>currencies <b id="ovLegCurr">—</b></span></div>
             </div>
           </div>
         </div>

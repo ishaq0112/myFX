@@ -2,29 +2,41 @@
 
 Running list of deferred work. Done items live in the code + README.
 
+## P0 — launch blockers
+- [ ] **Dodo Payments** — *parked until go-ahead.* Checkout, a webhook that
+      updates the user's `plan`, and wiring the Billing buttons that still only
+      show a toast: *Choose Business*, *Downgrade to Free*, *Update* card. Plans,
+      quotas, and per-plan limits are already live.
+- [ ] **Deployment** — hosting with HTTPS and a domain. Set `APP_URL` to the
+      real address, and enable Express `trust proxy` so the per-IP login limit
+      sees the real client IP behind the proxy.
+- [ ] **Email for real customers** — *Resend is live locally
+      (`RESEND_API_KEY` set; tested end-to-end) but in testing mode: the default
+      `onboarding@resend.dev` sender only delivers to the Resend account's own
+      email.* To open it up: verify a domain in Resend, set
+      `MAIL_FROM=MyFX <noreply@yourdomain.com>`, and swap the onboarding
+      (full-access) key for a **Sending access** key. Shares the domain with
+      deployment, so do them together.
+
+## Dashboard placeholders
+- [ ] **Settings actions** — save profile name, change password, and the 2FA
+      toggle only show a toast. Change password can reuse `setPassword` from the
+      reset flow.
+
 ## Deferred — auth
 - [ ] **Google sign-in setup** — *code is already built and tested; just needs
       credentials.* Create an OAuth client in Google Cloud Console, add
       `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` (+ `APP_SECRET`) to `.env`,
       redirect URI `http://localhost:3000/auth/google/callback`. Then
       `/auth/google` goes live. Until then it returns 503 (harmless).
-- [ ] **Email delivery for real customers** — *Resend is live locally
-      (`RESEND_API_KEY` set; tested end-to-end) but in testing mode: the default
-      `onboarding@resend.dev` sender only delivers to the Resend account's own
-      email.* To open it up: verify a domain in Resend, set
-      `MAIL_FROM=MyFX <noreply@yourdomain.com>`, and swap the onboarding
-      (full-access) key for a **Sending access** key.
-
-## Next feature (Stage 3)
-- [ ] **Stripe billing** — wire real payment + let a plan change move the user's
-      `plan` column. The plans, quotas, and per-plan limits are already live.
 
 ## Housekeeping
-- [ ] **Rotate the Neon password** — it was exposed in plaintext during setup.
-      Reset it in the Neon dashboard and update `DATABASE_URL` in `.env`.
-- [ ] **Existing test accounts** (e.g. `me@test.com`) predate email verification
-      and are now `unverified` → 403 on login. Re-signup, use
-      `/auth/resend-verification`, or mark them verified.
+- [ ] **Docs base URL** — `https://api.myfx.dev` is a placeholder; update it
+      once the real domain exists.
+- [ ] **Test accounts** — old ones like `me@test.com` predate email
+      verification and are `unverified` (403 on login); plus throwaway
+      `reset_*`, `uiflow_*`, and `deeplink_*` accounts created while testing.
+      Delete them.
 
 ## Done
 - [x] Stage 1: public FX API (ECB + NBP), daily scrape persisted to Neon.
@@ -40,3 +52,8 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Login rate-limiting — brute-force throttle by email + IP (`src/auth/loginLimiter.js`).
 - [x] Usage metering + per-plan quotas/rate limits (enforced with 429),
       `/usage` endpoint, dashboard wired to real usage (`src/usage/`, `src/plans.js`).
+- [x] Email delivery via Resend (testing mode; see P0 for going live).
+- [x] Overview wired to real data: error rate (`outcome_daily`), month-over-month
+      trend, and the Activity Log (`request_log`, newest 200 calls per user,
+      `GET /usage/activity`).
+- [x] Rotated the Neon password (it was exposed in plaintext during setup).
