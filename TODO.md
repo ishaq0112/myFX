@@ -28,10 +28,6 @@ Running list of deferred work. Done items live in the code + README.
 ## Housekeeping
 - [ ] **Docs base URL** — `https://api.myfx.dev` is a placeholder; update it
       once the real domain exists.
-- [ ] **Test accounts** — old ones like `me@test.com` predate email
-      verification and are `unverified` (403 on login); plus throwaway
-      `reset_*`, `uiflow_*`, and `deeplink_*` accounts created while testing.
-      Delete them.
 
 ## Done
 - [x] Stage 1: public FX API (ECB + NBP), daily scrape persisted to Neon.
@@ -59,3 +55,4 @@ Running list of deferred work. Done items live in the code + README.
 - [x] Fixed the Overview's sideways scroll (~820–1260px wide): its rows now
       respond to the content width via container queries (2×2 stat cards when
       four don't fit), so it also adapts when the sidebar is collapsed.
+- [x] Deleted 14 test accounts; only `ishaqshaikh0112@gmail.com` remains.
