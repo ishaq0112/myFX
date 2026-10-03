@@ -309,10 +309,12 @@ input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .dash{display:grid;grid-template-columns:1.7fr 1fr;gap:20px;align-items:start}
 @media(max-width:1000px){.dash{grid-template-columns:1fr}}
 .dash-left,.dash-right{display:flex;flex-direction:column;gap:20px;min-width:0}
-.dash2{display:flex;flex-direction:column;gap:20px}
-.drow-top{display:grid;grid-template-columns:1fr 290px;gap:20px;align-items:stretch}
-.drow-bot{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
-@media(max-width:900px){.drow-top,.drow-bot{grid-template-columns:1fr}}
+/* The Overview's rows respond to the CONTENT width (a container query on .dash2),
+   not the window, so they fit whether the sidebar is open, collapsed, or hidden.
+   minmax(0, …) tracks mean a row can never grow wider than its container. */
+.dash2{display:flex;flex-direction:column;gap:20px;container-type:inline-size}
+.drow-top{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:20px;align-items:stretch}
+.drow-bot{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
 .qa-card{display:flex;flex-direction:column;padding:18px}
 .qa-card .qa{margin-top:12px;flex:1}
 .qa-card .qa button{height:100%}
@@ -320,8 +322,12 @@ input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .card-pad h3{margin:0;font-size:17px}
 .card-pad .sub{color:var(--muted);font-size:12.5px;margin-top:3px}
 
-.mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-@media(max-width:640px){.mini-stats{grid-template-columns:1fr 1fr}}
+.mini-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+/* Four stat cards beside Quick Actions need ~150px each so a value like
+   "500,000" fits at full size; with less room, show them 2×2. */
+@container (max-width:951px){.mini-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* Too narrow for side-by-side cards: stack each row. */
+@container (max-width:639px){.drow-top,.drow-bot{grid-template-columns:minmax(0,1fr)}}
 .mini{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px;
   box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
 .mini .mtop{display:flex;align-items:center;gap:11px}
@@ -330,6 +336,9 @@ input:focus,select:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .mini .mi.t1{background:#e7efff;color:#2f6bff}.mini .mi.t2{background:#f0e9ff;color:#7c5cff}.mini .mi.t3{background:var(--accent-soft);color:var(--accent)}.mini .mi.t4{background:#e7f6ec;color:#16a34a}
 .mini .k{font-size:12px;color:var(--muted);line-height:1.25}
 .mini .v{font-size:30px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:auto;padding-top:14px;line-height:1;letter-spacing:-.5px}
+/* Small phones: scale the big numbers with the content width (30px at ~414px
+   phones, ~26px at 375, ~22px at 320) so a value like "500,000" stays inside. */
+@container (max-width:359px){.mini .v{font-size:clamp(20px,9cqi,30px)}}
 
 .banner-card{border-radius:18px;padding:26px 28px;position:relative;overflow:hidden;
   background:linear-gradient(110deg,#e8f0ff 0%,#dbe7ff 55%,#eef3ff 100%)}

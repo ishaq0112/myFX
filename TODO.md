@@ -18,10 +18,6 @@ Running list of deferred work. Done items live in the code + README.
       (full-access) key for a **Sending access** key. Shares the domain with
       deployment, so do them together.
 
-## Dashboard
-- [ ] **Sideways scroll at ~1070px wide** — the Quick Actions card on the
-      Overview gets cut off and the page scrolls horizontally.
-
 ## Deferred — auth
 - [ ] **Google sign-in setup** — *code is already built and tested; just needs
       credentials.* Create an OAuth client in Google Cloud Console, add
@@ -60,3 +56,6 @@ Running list of deferred work. Done items live in the code + README.
       other devices), and two-factor auth with an authenticator app: QR setup,
       10 recovery codes, a code step at login, and the same gate on password
       reset, email verification, and Google (`src/auth/totp.js`).
+- [x] Fixed the Overview's sideways scroll (~820–1260px wide): its rows now
+      respond to the content width via container queries (2×2 stat cards when
+      four don't fit), so it also adapts when the sidebar is collapsed.
