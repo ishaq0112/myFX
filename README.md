@@ -111,7 +111,8 @@ token. Links expire in 24h.
 **`POST /auth/resend-verification`** `{ "email" }` — sends a new link (generic
 reply, doesn't reveal whether the email exists).
 
-**`POST /auth/login`** `{ "email", "password" }` — returns a session token.
+**`POST /auth/login`** `{ "email", "password" }` — returns a session token, or
+`{ "two_factor_required": true, "challenge" }` when 2FA is on (see below).
 `401` bad credentials, **`403` if the email isn't verified yet**. Repeated
 failures are throttled (brute-force protection) and return `429`.
 
@@ -120,8 +121,25 @@ failures are throttled (brute-force protection) and return `429`.
 and expires in 1h; dev mode returns `dev_reset_url`.
 
 **`POST /auth/reset-password`** `{ "token", "password" }` — sets a new password,
-revokes all existing sessions, and returns a fresh session token. `400` if the
-token is invalid/expired or the password is too short.
+revokes all existing sessions, and returns a fresh session token (or a 2FA
+challenge). `400` if the token is invalid/expired or the password is too short.
+
+### Two-factor authentication (authenticator app)
+
+Standard TOTP codes (Google Authenticator, Authy, 1Password). Needs `APP_SECRET`
+in `.env`: secrets are encrypted with it, so **don't change it** once users have
+2FA on. With 2FA on, every sign-in path (password login, password reset, email
+verification, Google) returns a 5-minute `challenge` instead of a session:
+
+- **`POST /auth/login/2fa`** `{ "challenge", "code" }` — `code` is the 6-digit
+  app code or a recovery code. Returns the session token. Each app code and
+  recovery code works once; wrong codes are rate-limited (`429`).
+- **`POST /auth/2fa/setup`** *(Bearer)* — returns `secret`, `otpauth_url`, and a
+  `qr` image (data URL). 2FA stays off until enabled.
+- **`POST /auth/2fa/enable`** *(Bearer)* `{ "code" }` — confirms the app works,
+  turns 2FA on, and returns 10 `recovery_codes` (shown once).
+- **`POST /auth/2fa/disable`** *(Bearer)* `{ "code" }` — needs an app or recovery
+  code, so a stolen session alone can't turn it off.
 
 ### Sign in with Google
 
@@ -136,10 +154,14 @@ Setup: create an OAuth client in Google Cloud Console and set `GOOGLE_CLIENT_ID`
 `http://localhost:3000/auth/google/callback`. See `.env.example`.
 
 ### Session routes
-**`GET /auth/me`** *(Bearer)* — current account. **`POST /auth/logout`**
-*(Bearer)* — revokes the token. **`DELETE /auth/me`** *(Bearer)* — permanently
-deletes the account; child rows (sessions, API keys, usage, tokens) are removed
-by `ON DELETE CASCADE`.
+**`GET /auth/me`** *(Bearer)* — current account (includes `has_password` and
+`two_factor_enabled`). **`PATCH /auth/me`** *(Bearer)* `{ "name" }` — update the
+display name. **`POST /auth/change-password`** *(Bearer)*
+`{ "current_password", "new_password" }` — signs out every other session; the
+one making the change stays signed in. **`POST /auth/logout`** *(Bearer)* —
+revokes the token. **`DELETE /auth/me`** *(Bearer)* — permanently deletes the
+account; child rows (sessions, API keys, usage, tokens, 2FA codes) are removed by
+`ON DELETE CASCADE`.
 
 ## API keys
 

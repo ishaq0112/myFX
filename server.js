@@ -21,6 +21,7 @@ import authRouter from './src/auth/routes.js';
 import { initAuth, authAvailable } from './src/auth/store.js';
 import { googleConfigured } from './src/auth/google.js';
 import { mailerMode } from './src/auth/mailer.js';
+import { totpAvailable } from './src/auth/totp.js';
 import keysRouter from './src/keys/routes.js';
 import { initKeys } from './src/keys/store.js';
 import { requireApiKey } from './src/keys/middleware.js';
@@ -131,6 +132,7 @@ app.listen(PORT, async () => {
       console.log('Auth: ready (email/password + verification)');
       console.log(`  Google sign-in: ${googleConfigured() ? 'enabled' : 'not configured (set GOOGLE_CLIENT_ID/SECRET)'}`);
       console.log(`  Email delivery: ${mailerMode() === 'resend' ? 'Resend' : 'dev console (links logged here)'}`);
+      console.log(`  Two-factor auth: ${totpAvailable() ? 'available (authenticator app)' : 'unavailable (set APP_SECRET)'}`);
       console.log('  API keys: ready (/keys) — /v1/* now requires X-API-Key');
       console.log('  Usage metering: on — per-plan quota + rate limit enforced (/usage)');
     } else {

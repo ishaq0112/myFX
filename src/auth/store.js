@@ -6,6 +6,10 @@
 //                          google_sub (unique), created_at
 //   sessions            — token_hash (PK), user_id, expires_at
 //   email_verifications — token_hash (PK), user_id, expires_at
+//   password_resets     — token_hash (PK), user_id, expires_at
+//   recovery_codes      — (user_id, code_hash) — single-use 2FA backup codes
+//   login_challenges    — token_hash (PK), user_id, expires_at — the step
+//                          between a correct password and the 2FA code
 // Auth requires DATABASE_URL.
 
 import { sql, hasDb } from '../db.js';
@@ -40,6 +44,12 @@ export function initAuth() {
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS name TEXT`;
     // Migration: billing plan (drives usage quotas/rate limits). Default Free.
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS plan TEXT NOT NULL DEFAULT 'free'`;
+    // Migration: two-factor auth. totp_secret is the ENCRYPTED secret (pending
+    // during setup, active once totp_enabled); totp_last_step blocks replaying
+    // a code that was already used.
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN NOT NULL DEFAULT false`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_last_step BIGINT`;
 
     await sql`
       CREATE TABLE IF NOT EXISTS sessions (
@@ -64,6 +74,22 @@ export function initAuth() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         expires_at TIMESTAMPTZ NOT NULL
       )`;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS recovery_codes (
+        user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        code_hash  TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        PRIMARY KEY (user_id, code_hash)
+      )`;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS login_challenges (
+        token_hash TEXT PRIMARY KEY,
+        user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        expires_at TIMESTAMPTZ NOT NULL
+      )`;
   })();
   return initDone;
 }
@@ -74,7 +100,7 @@ export async function createUser(email, passwordHash, name = null) {
     const rows = await sql`
       INSERT INTO users (email, password_hash, name, auth_provider, email_verified)
       VALUES (${email}, ${passwordHash}, ${name}, 'password', false)
-      RETURNING id, email, name, email_verified, auth_provider, created_at`;
+      RETURNING id, email, name, password_hash, email_verified, auth_provider, created_at`;
     return rows[0];
   } catch (e) {
     if (e.code === '23505' || /duplicate key|unique/i.test(e.message)) {
@@ -88,15 +114,25 @@ export async function createUser(email, passwordHash, name = null) {
 
 export async function findUserByEmail(email) {
   const rows = await sql`
-    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, created_at
+    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan,
+           totp_enabled, totp_secret, totp_last_step, created_at
     FROM users WHERE email = ${email}`;
   return rows[0] || null;
 }
 
 export async function findUserById(id) {
   const rows = await sql`
-    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, created_at
+    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan,
+           totp_enabled, totp_secret, totp_last_step, created_at
     FROM users WHERE id = ${id}`;
+  return rows[0] || null;
+}
+
+/** Update the display name; returns the updated user. */
+export async function setName(userId, name) {
+  const rows = await sql`
+    UPDATE users SET name = ${name} WHERE id = ${userId}
+    RETURNING id, email, name, password_hash, email_verified, auth_provider, plan, totp_enabled, created_at`;
   return rows[0] || null;
 }
 
@@ -105,20 +141,20 @@ export async function findUserById(id) {
 export async function upsertGoogleUser({ sub, email }) {
   // 1. Already linked by Google subject id?
   let rows = await sql`
-    SELECT id, email, password_hash, email_verified, auth_provider, google_sub, created_at
+    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, totp_enabled, created_at
     FROM users WHERE google_sub = ${sub}`;
   if (rows[0]) return rows[0];
 
   // 2. Existing account with this email (e.g. signed up with password)? Link it.
   rows = await sql`
-    SELECT id, email, password_hash, email_verified, auth_provider, google_sub, created_at
+    SELECT id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, totp_enabled, created_at
     FROM users WHERE email = ${email}`;
   if (rows[0]) {
     const updated = await sql`
       UPDATE users
       SET google_sub = ${sub}, email_verified = true
       WHERE id = ${rows[0].id}
-      RETURNING id, email, password_hash, email_verified, auth_provider, google_sub, created_at`;
+      RETURNING id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, totp_enabled, created_at`;
     return updated[0];
   }
 
@@ -126,7 +162,7 @@ export async function upsertGoogleUser({ sub, email }) {
   const created = await sql`
     INSERT INTO users (email, auth_provider, google_sub, email_verified)
     VALUES (${email}, 'google', ${sub}, true)
-    RETURNING id, email, password_hash, email_verified, auth_provider, google_sub, created_at`;
+    RETURNING id, email, name, password_hash, email_verified, auth_provider, google_sub, plan, totp_enabled, created_at`;
   return created[0];
 }
 
@@ -163,6 +199,82 @@ export async function consumePasswordReset(tokenHash) {
 /** Revoke every session for a user (e.g. after a password reset). */
 export async function deleteSessionsForUser(userId) {
   await sql`DELETE FROM sessions WHERE user_id = ${userId}`;
+}
+
+/** Revoke every session except one (e.g. the device changing the password). */
+export async function deleteOtherSessions(userId, keepTokenHash) {
+  await sql`DELETE FROM sessions WHERE user_id = ${userId} AND token_hash <> ${keepTokenHash}`;
+}
+
+// --- two-factor auth ---
+
+/** Store a new (encrypted) secret during setup. Never touches an active one. */
+export async function setPendingTotpSecret(userId, encryptedSecret) {
+  const rows = await sql`
+    UPDATE users SET totp_secret = ${encryptedSecret}, totp_last_step = NULL
+    WHERE id = ${userId} AND totp_enabled = false
+    RETURNING id`;
+  return rows.length > 0;
+}
+
+/** Turn 2FA on and store its recovery codes (hashed), replacing any old ones. */
+export async function enableTotp(userId, usedStep, recoveryHashes) {
+  await sql`DELETE FROM recovery_codes WHERE user_id = ${userId}`;
+  await sql`
+    INSERT INTO recovery_codes (user_id, code_hash)
+    SELECT ${userId}, unnest(${recoveryHashes}::text[])`;
+  await sql`UPDATE users SET totp_enabled = true, totp_last_step = ${usedStep} WHERE id = ${userId}`;
+}
+
+export async function disableTotp(userId) {
+  await sql`UPDATE users SET totp_enabled = false, totp_secret = NULL, totp_last_step = NULL WHERE id = ${userId}`;
+  await sql`DELETE FROM recovery_codes WHERE user_id = ${userId}`;
+}
+
+/** Record a code's time step as used, only if it's newer than the last one, so
+ *  two simultaneous requests can't both spend the same code. True if it won. */
+export async function markTotpStepUsed(userId, step) {
+  const rows = await sql`
+    UPDATE users SET totp_last_step = ${step}
+    WHERE id = ${userId} AND (totp_last_step IS NULL OR totp_last_step < ${step})
+    RETURNING id`;
+  return rows.length > 0;
+}
+
+/** Spend a recovery code. True if it existed (it's deleted either way). */
+export async function consumeRecoveryCode(userId, codeHash) {
+  const rows = await sql`
+    DELETE FROM recovery_codes WHERE user_id = ${userId} AND code_hash = ${codeHash}
+    RETURNING code_hash`;
+  return rows.length > 0;
+}
+
+// --- 2FA login challenges (password OK, waiting for the code) ---
+
+export async function createLoginChallenge(userId, tokenHash, expiresAt) {
+  await sql`DELETE FROM login_challenges WHERE user_id = ${userId} AND expires_at < now()`;
+  await sql`
+    INSERT INTO login_challenges (token_hash, user_id, expires_at)
+    VALUES (${tokenHash}, ${userId}, ${expiresAt.toISOString()})`;
+}
+
+/** The challenge's userId if it's live, else null. Not consumed here, so a
+ *  mistyped code can be retried (attempts are rate-limited by the route). */
+export async function findLoginChallenge(tokenHash) {
+  const rows = await sql`SELECT user_id, expires_at FROM login_challenges WHERE token_hash = ${tokenHash}`;
+  const row = rows[0];
+  if (!row) return null;
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    await deleteLoginChallenge(tokenHash);
+    return null;
+  }
+  return row.user_id;
+}
+
+/** Delete a challenge. True if it existed, so only one request can use it. */
+export async function deleteLoginChallenge(tokenHash) {
+  const rows = await sql`DELETE FROM login_challenges WHERE token_hash = ${tokenHash} RETURNING token_hash`;
+  return rows.length > 0;
 }
 
 // --- email verification tokens ---

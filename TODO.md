@@ -18,10 +18,9 @@ Running list of deferred work. Done items live in the code + README.
       (full-access) key for a **Sending access** key. Shares the domain with
       deployment, so do them together.
 
-## Dashboard placeholders
-- [ ] **Settings actions** — save profile name, change password, and the 2FA
-      toggle only show a toast. Change password can reuse `setPassword` from the
-      reset flow.
+## Dashboard
+- [ ] **Sideways scroll at ~1070px wide** — the Quick Actions card on the
+      Overview gets cut off and the page scrolls horizontally.
 
 ## Deferred — auth
 - [ ] **Google sign-in setup** — *code is already built and tested; just needs
@@ -57,3 +56,7 @@ Running list of deferred work. Done items live in the code + README.
       trend, and the Activity Log (`request_log`, newest 200 calls per user,
       `GET /usage/activity`).
 - [x] Rotated the Neon password (it was exposed in plaintext during setup).
+- [x] Settings wired: save name (`PATCH /auth/me`), change password (signs out
+      other devices), and two-factor auth with an authenticator app: QR setup,
+      10 recovery codes, a code step at login, and the same gate on password
+      reset, email verification, and Google (`src/auth/totp.js`).

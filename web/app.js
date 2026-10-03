@@ -47,6 +47,7 @@ function toast(msg, type = 'ok') {
 /* ============ AUTH ============ */
 let authMode = 'signup';
 let resetToken = null; // set when arriving via a ?reset=<token> link
+let pendingChallenge = null; // 2FA: issued after a correct password, traded with a code
 const showEl = (id, on) => $(id).classList.toggle('hidden', !on);
 function setAuthMode(mode) {
   authMode = mode;
@@ -55,6 +56,7 @@ function setAuthMode(mode) {
     login:  { heading: 'Welcome back', sub: 'Log in to your MyFX dashboard.', submit: 'Log in' },
     forgot: { heading: 'Reset your password', sub: "Enter your email and we'll send you a link to reset it.", submit: 'Send reset link' },
     reset:  { heading: 'Set a new password', sub: 'Choose a new password for your account.', submit: 'Update password' },
+    twofa:  { heading: 'Two-factor authentication', sub: 'Enter the 6-digit code from your authenticator app.', submit: 'Verify' },
   }[mode];
   $('#authHeading').textContent = cfg.heading;
   $('#authSub').textContent = cfg.sub;
@@ -64,6 +66,7 @@ function setAuthMode(mode) {
   showEl('#emailField', mode === 'signup' || mode === 'login' || mode === 'forgot');
   showEl('#passField', mode === 'signup' || mode === 'login' || mode === 'reset');
   showEl('#confirmField', mode === 'signup' || mode === 'reset');
+  showEl('#codeField', mode === 'twofa');
   showEl('#forgotLink', mode === 'login');
   const social = mode === 'signup' || mode === 'login';
   showEl('#authDiv', social);
@@ -71,6 +74,7 @@ function setAuthMode(mode) {
 
   if (mode === 'signup') { $('#authSwitchText').textContent = 'Already have an account?'; $('#authToggle').textContent = 'Log in'; }
   else if (mode === 'login') { $('#authSwitchText').textContent = 'New to MyFX?'; $('#authToggle').textContent = 'Create one'; }
+  else if (mode === 'twofa') { $('#authSwitchText').textContent = 'Wrong account?'; $('#authToggle').textContent = 'Back to log in'; }
   else { $('#authSwitchText').textContent = 'Remembered your password?'; $('#authToggle').textContent = 'Back to log in'; }
 
   $('#authNote').classList.add('hidden');
@@ -113,7 +117,32 @@ function clearResetParam() {
   try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
 }
 
+// Any sign-in response (login, reset, verify) is either a session, or, with 2FA
+// on, a challenge that still needs a code. Returns false if it was neither.
+function handleSignIn(data) {
+  if (data?.token) { localStorage.setItem(TOKEN_KEY, data.token); enterApp(); return true; }
+  if (data?.two_factor_required) {
+    pendingChallenge = data.challenge;
+    setAuthMode('twofa');
+    $('#authCode').value = '';
+    $('#authCode').focus();
+    return true;
+  }
+  return false;
+}
+// Enter submits the code step.
+$('#authCode').onkeydown = (e) => { if (e.key === 'Enter') $('#authSubmit').click(); };
+
 $('#authSubmit').onclick = async () => {
+  // 2FA step: trade the challenge + a code for a session.
+  if (authMode === 'twofa') {
+    const code = $('#authCode').value.trim();
+    if (!code) return note('err', 'Enter the code from your authenticator app.');
+    const { ok, data } = await api('/auth/login/2fa', { method: 'POST', body: { challenge: pendingChallenge, code } });
+    if (ok && handleSignIn(data)) { pendingChallenge = null; return; }
+    return note('err', data?.error || 'Invalid code. Try again.');
+  }
+
   // Password-reset request: only an email is needed.
   if (authMode === 'forgot') {
     const email = $('#authEmail').value.trim();
@@ -140,7 +169,7 @@ $('#authSubmit').onclick = async () => {
     const { ok, data } = await api('/auth/reset-password', { method: 'POST', body: { token: resetToken, password } });
     if (!ok) return note('err', data?.error || 'Reset link is invalid or expired. Request a new one.');
     clearResetParam();
-    if (data.token) { localStorage.setItem(TOKEN_KEY, data.token); return enterApp(); }
+    if (handleSignIn(data)) return; // signed in, or (2FA on) asking for a code
     note('ok', 'Password updated. You can log in now.');
     setAuthMode('login');
     return;
@@ -161,8 +190,7 @@ $('#authSubmit').onclick = async () => {
       $('#devVerify').onclick = async () => {
         const r = await fetch(data.dev_verify_url);
         const d = await r.json();
-        if (d.token) { localStorage.setItem(TOKEN_KEY, d.token); enterApp(); }
-        else note('err', d.error || 'Verification failed.');
+        if (!handleSignIn(d)) note('err', d.error || 'Verification failed.');
       };
     } else if (data.email_failed) {
       note('warn', 'Account created, but we couldn’t send the verification email. Log in and choose <b>Resend verification</b> to try again.');
@@ -174,7 +202,7 @@ $('#authSubmit').onclick = async () => {
 
   // login
   const { ok, status, data } = await api('/auth/login', { method: 'POST', body: { email, password } });
-  if (ok && data.token) { localStorage.setItem(TOKEN_KEY, data.token); return enterApp(); }
+  if (ok && handleSignIn(data)) return;
   if (status === 403) {
     note('warn', 'Email not verified. <button class="btn btn-outline btn-sm" id="resend" style="margin-top:8px">Resend verification</button>');
     $('#resend').onclick = async () => {
@@ -183,7 +211,7 @@ $('#authSubmit').onclick = async () => {
         note('info', 'Verify link ready: <button class="btn btn-primary btn-sm" id="devVerify" style="margin-top:8px">Verify &amp; continue</button>');
         $('#devVerify').onclick = async () => {
           const v = await fetch(r.data.dev_verify_url); const d = await v.json();
-          if (d.token) { localStorage.setItem(TOKEN_KEY, d.token); enterApp(); }
+          if (!handleSignIn(d)) note('err', d.error || 'Verification failed.');
         };
       } else toast('Verification email sent');
     };
@@ -211,31 +239,114 @@ $('#logoutBtn2').onclick = doLogout;
 const openScrim = (id) => $(id).classList.remove('hidden');
 const closeScrim = (id) => $(id).classList.add('hidden');
 
-// Profile: reflect the typed name in the sidebar/avatar immediately (not persisted in this demo).
-$('#saveProfile').onclick = () => {
-  const name = $('#setName').value.trim();
-  if (name) {
-    $('#welcomeName').textContent = name;
-    $('#setDisplayName').textContent = name;
-  }
-  toast('Profile updates aren’t saved in this demo yet.', 'info');
+// Show an error inside a modal's note box.
+const modalNote = (id, msg) => { const n = $(id); n.textContent = msg; n.classList.remove('hidden'); };
+
+// Profile: save the display name (empty clears it, falling back to the email).
+$('#saveProfile').onclick = async () => {
+  const btn = $('#saveProfile');
+  btn.disabled = true;
+  const { ok, data } = await api('/auth/me', { method: 'PATCH', auth: true, body: { name: $('#setName').value.trim() } });
+  btn.disabled = false;
+  if (!ok) return toast(data?.error || 'Could not save your profile.', 'err');
+  ME = { ...ME, ...data.user };
+  renderProfile();
+  toast('Profile saved');
 };
 
-// Security
-$('#changePwBtn').onclick = () => { $('#pwNote').classList.add('hidden'); openScrim('#changePwScrim'); };
-$('#pwSubmit').onclick = () => {
+// Security: change password (signs out other devices; this one stays in).
+$('#changePwBtn').onclick = () => {
+  ['#pwCurrent', '#pwNew', '#pwConfirm'].forEach((s) => ($(s).value = ''));
+  $('#pwNote').classList.add('hidden');
+  openScrim('#changePwScrim');
+  $('#pwCurrent').focus();
+};
+$('#pwSubmit').onclick = async () => {
   const cur = $('#pwCurrent').value, nw = $('#pwNew').value, cf = $('#pwConfirm').value;
-  const note = (m) => { const n = $('#pwNote'); n.textContent = m; n.classList.remove('hidden'); };
-  if (!cur || !nw) return note('Fill in all fields.');
-  if (nw.length < 8) return note('New password must be at least 8 characters.');
-  if (nw !== cf) return note('New passwords don’t match.');
+  if (!cur || !nw) return modalNote('#pwNote', 'Fill in all fields.');
+  if (nw.length < 8) return modalNote('#pwNote', 'New password must be at least 8 characters.');
+  if (nw !== cf) return modalNote('#pwNote', 'New passwords don’t match.');
+  const btn = $('#pwSubmit');
+  btn.disabled = true;
+  const { ok, data } = await api('/auth/change-password', { method: 'POST', auth: true, body: { current_password: cur, new_password: nw } });
+  btn.disabled = false;
+  if (!ok) return modalNote('#pwNote', data?.error || 'Could not change your password.');
   closeScrim('#changePwScrim');
   ['#pwCurrent', '#pwNew', '#pwConfirm'].forEach((s) => ($(s).value = ''));
-  toast('Password change isn’t wired in this demo yet.', 'info');
+  toast(data.message || 'Password updated');
 };
 
-$('#twofaToggle').onchange = (e) => {
-  toast(e.target.checked ? 'Two-factor auth isn’t active in this demo yet.' : 'Two-factor disabled.', 'info');
+// Two-factor. The switch only changes after the server confirms, so it never
+// shows "on" while 2FA is actually off (or the reverse).
+function renderTwofa() {
+  const on = !!ME?.two_factor_enabled;
+  $('#twofaToggle').checked = on;
+  $('#twofaSub').textContent = on
+    ? 'On. You’ll enter a code from your authenticator app when you sign in.'
+    : 'Add an extra layer of security at sign-in.';
+}
+$('#twofaToggle').onchange = async () => {
+  renderTwofa(); // snap back until the flow completes
+  if (ME?.two_factor_enabled) {
+    $('#tfOffCode').value = '';
+    $('#tfOffNote').classList.add('hidden');
+    openScrim('#twofaOffScrim');
+    $('#tfOffCode').focus();
+    return;
+  }
+  const { ok, data } = await api('/auth/2fa/setup', { method: 'POST', auth: true });
+  if (!ok) return toast(data?.error || 'Could not start two-factor setup.', 'err');
+  $('#tfQr').src = data.qr;
+  $('#tfSecret').textContent = data.secret.match(/.{1,4}/g).join(' '); // grouped for reading
+  $('#tfSecret').dataset.raw = data.secret;
+  $('#tfCode').value = '';
+  $('#tfNote').classList.add('hidden');
+  $('#tfSetupStep').classList.remove('hidden');
+  $('#tfCodesStep').classList.add('hidden');
+  openScrim('#twofaScrim');
+  $('#tfCode').focus();
+};
+$('#tfCopySecret').onclick = () => { copy($('#tfSecret').dataset.raw || ''); toast('Key copied'); };
+$('#tfCode').onkeydown = (e) => { if (e.key === 'Enter') $('#tfEnable').click(); };
+$('#tfEnable').onclick = async () => {
+  const code = $('#tfCode').value.trim();
+  if (!/^\d{6}$/.test(code)) return modalNote('#tfNote', 'Enter the 6-digit code from your app.');
+  const btn = $('#tfEnable');
+  btn.disabled = true;
+  const { ok, data } = await api('/auth/2fa/enable', { method: 'POST', auth: true, body: { code } });
+  btn.disabled = false;
+  if (!ok) return modalNote('#tfNote', data?.error || 'That code didn’t match.');
+  ME = { ...ME, two_factor_enabled: true };
+  renderTwofa();
+  const codes = data.recovery_codes || [];
+  $('#tfCodes').innerHTML = codes.map((c) => `<span>${esc(c)}</span>`).join('');
+  $('#tfCodes').dataset.text = codes.join('\n');
+  $('#tfSetupStep').classList.add('hidden');
+  $('#tfCodesStep').classList.remove('hidden');
+  toast('Two-factor authentication is on');
+};
+$('#tfCopyCodes').onclick = () => { copy($('#tfCodes').dataset.text || ''); toast('Recovery codes copied'); };
+$('#tfDownloadCodes').onclick = () => {
+  const text = `MyFX recovery codes for ${ME?.email || 'your account'}\nEach code works once.\n\n${$('#tfCodes').dataset.text || ''}\n`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  a.download = 'myfx-recovery-codes.txt';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('#tfOffCode').onkeydown = (e) => { if (e.key === 'Enter') $('#tfDisable').click(); };
+$('#tfDisable').onclick = async () => {
+  const code = $('#tfOffCode').value.trim();
+  if (!code) return modalNote('#tfOffNote', 'Enter a code to confirm.');
+  const btn = $('#tfDisable');
+  btn.disabled = true;
+  const { ok, data } = await api('/auth/2fa/disable', { method: 'POST', auth: true, body: { code } });
+  btn.disabled = false;
+  if (!ok) return modalNote('#tfOffNote', data?.error || 'Invalid code.');
+  ME = { ...ME, two_factor_enabled: false };
+  renderTwofa();
+  closeScrim('#twofaOffScrim');
+  toast('Two-factor authentication is off');
 };
 
 // Danger zone
@@ -257,22 +368,33 @@ $('#deleteConfirm').onclick = async () => {
 };
 
 /* ============ ENTER APP ============ */
+// Name shown in the sidebar + Settings: the saved name, else derived from the email.
+function renderProfile() {
+  const hasName = ME.name && ME.name.trim();
+  let display = hasName ? ME.name.trim() : (ME.email.split('@')[0] || 'there').replace(/[._-]+/g, ' ');
+  if (!hasName) display = display.charAt(0).toUpperCase() + display.slice(1);
+  $('#welcomeName').textContent = display;
+  $('#setDisplayName').textContent = display;
+  $('#setName').value = hasName ? ME.name.trim() : '';
+}
+
 async function enterApp() {
   const { ok, data } = await api('/auth/me', { auth: true });
   if (!ok) { logoutLocal(); return; }
   ME = data.user;
   const initial = (ME.email[0] || '?').toUpperCase();
-  const hasName = ME.name && ME.name.trim();
-  let display = hasName ? ME.name.trim() : (ME.email.split('@')[0] || 'there').replace(/[._-]+/g, ' ');
-  if (!hasName) display = display.charAt(0).toUpperCase() + display.slice(1);
-  $('#welcomeName').textContent = display;
+  renderProfile();
   $('#sideAvatar').textContent = initial;
   $('#sideEmail').textContent = ME.email;
   // settings
   $('#setAvatar').textContent = initial;
-  $('#setDisplayName').textContent = display;
-  $('#setName').value = hasName ? ME.name.trim() : '';
   $('#setEmailInput').value = ME.email;
+  // Google-only accounts have no password to change.
+  showEl('#changePwBtn', ME.has_password);
+  $('#pwSub').textContent = ME.has_password
+    ? 'Change the password you use to sign in.'
+    : 'You sign in with Google, so there’s no password to change.';
+  renderTwofa();
   $('#stVerified').innerHTML = ME.email_verified ? '<span class="badge active">✓ Verified</span>' : '<span class="badge suspended">Unverified</span>';
   $('#stProvider').textContent = ME.auth_provider === 'google' ? 'Google' : 'Email & password';
   $('#setJoined').textContent = 'Member since ' + (ME.created_at ? new Date(ME.created_at).toLocaleDateString() : '—');
